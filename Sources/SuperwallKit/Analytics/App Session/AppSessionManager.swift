@@ -26,19 +26,23 @@ class AppSessionManager {
   private var didTrackAppLaunch = false
   private var cancellable: AnyCancellable?
 
-  private unowned let configManager: ConfigManager
-  private unowned let storage: Storage
-  private unowned let delegate: AppManagerDelegate & DeviceHelperFactory & UserAttributesEventFactory
+  private var configManager: ConfigManager {
+    return factory.configManager
+  }
 
-  init(
-    configManager: ConfigManager,
-    identityManager: IdentityManager,
-    storage: Storage,
-    delegate: AppManagerDelegate & DeviceHelperFactory & UserAttributesEventFactory
-  ) {
-    self.configManager = configManager
-    self.storage = storage
-    self.delegate = delegate
+  private var storage: Storage {
+    return factory.storage
+  }
+  
+  private var delegate: AppManagerDelegate & DeviceHelperFactory & UserAttributesEventFactory {
+    return factory
+  }
+
+  let factory: DependencyContainer
+
+  init(factory: DependencyContainer) {
+    self.factory = factory
+
     Task {
       await addActiveStateObservers()
     }

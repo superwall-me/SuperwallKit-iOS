@@ -73,7 +73,7 @@ class Storage {
   /// The disk cache.
   private let cache: Cache
 
-  private unowned let factory: DeviceHelperFactory & HasExternalPurchaseControllerFactory
+  private let factory: DeviceHelperFactory & HasExternalPurchaseControllerFactory
 
   // MARK: - Configuration
 

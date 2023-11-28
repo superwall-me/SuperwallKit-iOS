@@ -21,7 +21,7 @@ class SWWebView: WKWebView {
   var didFailToLoad = false
   private let wkConfig: WKWebViewConfiguration
   private let isMac: Bool
-  private unowned let sessionEventsManager: SessionEventsManager
+  private let sessionEventsManager: SessionEventsManager
 
   init(
     isMac: Bool,

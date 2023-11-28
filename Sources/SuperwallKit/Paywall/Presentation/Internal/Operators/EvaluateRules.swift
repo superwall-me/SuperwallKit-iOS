@@ -17,11 +17,7 @@ extension Superwall {
     from request: PresentationRequest
   ) async throws -> RuleEvaluationOutcome {
     if let eventData = request.presentationInfo.eventData {
-      let ruleLogic = RuleLogic(
-        configManager: dependencyContainer.configManager,
-        storage: dependencyContainer.storage,
-        factory: dependencyContainer
-      )
+      let ruleLogic = RuleLogic(factory: dependencyContainer)
       return await ruleLogic.evaluateRules(
         forEvent: eventData,
         triggers: dependencyContainer.configManager.triggersByEventName

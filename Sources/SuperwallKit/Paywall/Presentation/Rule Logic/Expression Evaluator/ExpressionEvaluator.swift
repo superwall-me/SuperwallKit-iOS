@@ -16,14 +16,12 @@ protocol ExpressionEvaluating {
 }
 
 struct ExpressionEvaluator: ExpressionEvaluating {
-  private let storage: Storage
-  private unowned let factory: RuleAttributesFactory
+  private var storage: Storage {
+    return factory.storage
+  }
+  private let factory: DependencyContainer
 
-  init(
-    storage: Storage,
-    factory: RuleAttributesFactory
-  ) {
-    self.storage = storage
+  init(factory: DependencyContainer) {
     self.factory = factory
   }
 

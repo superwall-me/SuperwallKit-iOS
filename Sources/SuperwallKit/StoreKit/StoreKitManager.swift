@@ -3,16 +3,13 @@ import StoreKit
 import Combine
 
 actor StoreKitManager {
-  /// Handler purchasing and restoring.
-  let purchaseController: InternalPurchaseController
+  private let factory: DependencyContainer
 
   /// Retrieves products from storekit.
-  private let productsFetcher: ProductsFetcherSK1
+  private var productsFetcher: ProductsFetcherSK1 {
+    return factory.productsFetcher
+  }
 
-  private lazy var receiptManager = ReceiptManager(
-    delegate: productsFetcher,
-    purchaseController: purchaseController
-  )
   private(set) var productsById: [String: StoreProduct] = [:]
   private struct ProductProcessingResult {
     let productIdsToLoad: Set<String>
@@ -20,13 +17,8 @@ actor StoreKitManager {
     let products: [Product]
   }
 
-  init(
-    purchaseController: InternalPurchaseController,
-    productsFetcher: ProductsFetcherSK1 = ProductsFetcherSK1()
-  ) {
-    self.productsFetcher = productsFetcher
-    self.purchaseController = purchaseController
-    purchaseController.delegate = self
+  init(factory: DependencyContainer) {
+    self.factory = factory
   }
 
   func getProductVariables(for paywall: Paywall) async -> [ProductVariable] {
@@ -128,51 +120,5 @@ actor StoreKitManager {
       substituteProductsById: substituteProductsById,
       products: products
     )
-  }
-}
-
-// MARK: - Restoration
-extension StoreKitManager: RestoreDelegate {
-  func didRestore(result: RestorationResult) async {
-    let hasRestored = result == .restored
-    await refreshReceipt()
-    if hasRestored {
-      await loadPurchasedProducts()
-    }
-  }
-}
-
-// MARK: - Receipt API
-extension StoreKitManager {
-  /// This refreshes the device receipt.
-  ///
-  /// - Warning: This will prompt the user to log in, so only do this on
-  /// when restoring or after purchasing.
-  func refreshReceipt() async {
-    Logger.debug(
-      logLevel: .debug,
-      scope: .storeKitManager,
-      message: "Refreshing App Store receipt."
-    )
-    await receiptManager.refreshReceipt()
-  }
-
-  /// Loads the purchased products from the receipt,
-  func loadPurchasedProducts() async {
-    Logger.debug(
-      logLevel: .debug,
-      scope: .storeKitManager,
-      message: "Loading purchased products from the App Store receipt."
-    )
-    await receiptManager.loadPurchasedProducts()
-  }
-
-  /// Determines whether a free trial is available based on the product the user is purchasing.
-  ///
-  /// A free trial is available if the user hasn't already purchased within the subscription group of the
-  /// supplied product. If it isn't a subscription-based product or there are other issues retrieving the products,
-  /// the outcome will default to whether or not the user has already purchased that product.
-  func isFreeTrialAvailable(for product: StoreProduct) async -> Bool {
-    return await receiptManager.isFreeTrialAvailable(for: product)
   }
 }

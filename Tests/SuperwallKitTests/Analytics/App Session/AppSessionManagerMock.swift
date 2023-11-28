@@ -20,29 +20,3 @@ class AppManagerDelegateMock: AppManagerDelegate, DeviceHelperFactory, UserAttri
 
   func didUpdateAppSession(_ appSession: AppSession) async {}
 }
-
-final class AppSessionManagerMock: AppSessionManager {
-  var internalAppSession: AppSession
-  override var appSession: AppSession {
-    return internalAppSession
-  }
-
-  init(
-    appSession: AppSession,
-    identityManager: IdentityManager,
-    configManager: ConfigManager,
-    storage: Storage
-  ) {
-    internalAppSession = appSession
-    super.init(
-      configManager: configManager,
-      identityManager: identityManager,
-      storage: storage,
-      delegate: AppManagerDelegateMock()
-    )
-  }
-
-  override func listenForAppSessionTimeout() {
-    // Overriding so we don't get ny issues when setting config manually.
-  }
-}

@@ -39,10 +39,7 @@ final class GetPaywallVcOperatorTests: XCTestCase {
     .store(in: &cancellables)
 
     let dependencyContainer = DependencyContainer()
-    let paywallManager = PaywallManagerMock(
-      factory: dependencyContainer,
-      paywallRequestManager: dependencyContainer.paywallRequestManager
-    )
+    let paywallManager = PaywallManagerMock(factory: dependencyContainer)
     paywallManager.getPaywallError = PresentationPipelineError.noPaywallViewController
 
     let publisher = CurrentValueSubject<SubscriptionStatus, Never>(SubscriptionStatus.active)
@@ -92,10 +89,7 @@ final class GetPaywallVcOperatorTests: XCTestCase {
     .store(in: &cancellables)
 
     let dependencyContainer = DependencyContainer()
-    let paywallManager = PaywallManagerMock(
-      factory: dependencyContainer,
-      paywallRequestManager: dependencyContainer.paywallRequestManager
-    )
+    let paywallManager = PaywallManagerMock(factory: dependencyContainer)
     paywallManager.getPaywallError = PresentationPipelineError.userIsSubscribed
 
     let publisher = CurrentValueSubject<SubscriptionStatus, Never>(SubscriptionStatus.inactive)
@@ -135,10 +129,7 @@ final class GetPaywallVcOperatorTests: XCTestCase {
     .store(in: &cancellables)
 
     let dependencyContainer = DependencyContainer()
-    let paywallManager = PaywallManagerMock(
-      factory: dependencyContainer,
-      paywallRequestManager: dependencyContainer.paywallRequestManager
-    )
+    let paywallManager = PaywallManagerMock(factory: dependencyContainer)
     paywallManager.getPaywallVc = dependencyContainer.makePaywallViewController(for: .stub(), withCache: nil, delegate: nil)
     dependencyContainer.paywallManager = paywallManager
 

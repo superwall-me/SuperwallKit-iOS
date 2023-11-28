@@ -100,24 +100,17 @@ protocol HasExternalPurchaseControllerFactory: AnyObject {
 }
 
 protocol ApiFactory: AnyObject {
-  // TODO: Think of an alternative way such that we don't need to do this:
-  // swiftlint:disable implicitly_unwrapped_optional
-  var api: Api! { get }
-  var storage: Storage! { get }
-  var deviceHelper: DeviceHelper! { get }
-  var configManager: ConfigManager! { get }
-  var identityManager: IdentityManager! { get }
-  // swiftlint:enable implicitly_unwrapped_optional
+  var api: Api { get }
+  var storage: Storage { get }
+  var deviceHelper: DeviceHelper { get }
+  var configManager: ConfigManager { get }
+  var identityManager: IdentityManager { get }
 
   func makeHeaders(
     fromRequest request: URLRequest,
     isForDebugging: Bool,
     requestId: String
   ) async -> [String: String]
-}
-
-protocol ProductPurchaserFactory: AnyObject {
-  func makeSK1ProductPurchaser() -> ProductPurchaserSK1
 }
 
 protocol StoreTransactionFactory: AnyObject {

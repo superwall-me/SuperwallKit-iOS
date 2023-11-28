@@ -112,7 +112,7 @@ public final class PaywallInfo: NSObject {
   /// Surveys attached to a paywall.
   public let surveys: [Survey]
 
-  private unowned let factory: TriggerSessionManagerFactory
+  private let factory: DependencyContainer
 
   init(
     databaseId: String,
@@ -135,7 +135,7 @@ public final class PaywallInfo: NSObject {
     paywalljsVersion: String?,
     isFreeTrialAvailable: Bool,
     presentationSourceType: String?,
-    factory: TriggerSessionManagerFactory,
+    factory: DependencyContainer,
     featureGatingBehavior: FeatureGatingBehavior,
     closeReason: PaywallCloseReason,
     localNotifications: [LocalNotification],

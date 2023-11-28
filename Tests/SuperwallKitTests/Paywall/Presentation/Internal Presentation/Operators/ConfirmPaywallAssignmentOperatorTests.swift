@@ -15,14 +15,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
   @MainActor
   func test_confirmPaywallAssignment_debuggerLaunched() async {
     let dependencyContainer = DependencyContainer()
-    let configManager = ConfigManagerMock(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: dependencyContainer.storage,
-      network: dependencyContainer.network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = ConfigManagerMock(options: dependencyContainer.options, factory: dependencyContainer)
     try? await Task.sleep(nanoseconds: 10_000_000)
     dependencyContainer.configManager = configManager
 
@@ -39,14 +32,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
   @MainActor
   func test_confirmPaywallAssignment_noAssignment() async {
     let dependencyContainer = DependencyContainer()
-    let configManager = ConfigManagerMock(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: dependencyContainer.storage,
-      network: dependencyContainer.network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = ConfigManagerMock(options: dependencyContainer.options, factory: dependencyContainer)
     try? await Task.sleep(nanoseconds: 10_000_000)
     dependencyContainer.configManager = configManager
 
@@ -64,14 +50,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
   @MainActor
   func test_confirmPaywallAssignment_confirmAssignment() async {
     let dependencyContainer = DependencyContainer()
-    let configManager = ConfigManagerMock(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: dependencyContainer.storage,
-      network: dependencyContainer.network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = ConfigManagerMock(options: dependencyContainer.options, factory: dependencyContainer)
     try? await Task.sleep(nanoseconds: 10_000_000)
     dependencyContainer.configManager = configManager
 
@@ -94,14 +73,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
   @MainActor
   func test_confirmPaywallAssignment_getPresentationResult() async {
     let dependencyContainer = DependencyContainer()
-    let configManager = ConfigManagerMock(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: dependencyContainer.storage,
-      network: dependencyContainer.network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = ConfigManagerMock(options: dependencyContainer.options, factory: dependencyContainer)
     try? await Task.sleep(nanoseconds: 10_000_000)
     dependencyContainer.configManager = configManager
 
@@ -124,14 +96,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
   @MainActor
   func test_confirmPaywallAssignment_getImplicitPresentationResult() async {
     let dependencyContainer = DependencyContainer()
-    let configManager = ConfigManagerMock(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: dependencyContainer.storage,
-      network: dependencyContainer.network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = ConfigManagerMock(options: dependencyContainer.options, factory: dependencyContainer)
     try? await Task.sleep(nanoseconds: 10_000_000)
     dependencyContainer.configManager = configManager
 

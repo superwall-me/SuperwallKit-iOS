@@ -15,8 +15,16 @@ actor EventsQueue {
   private let maxEventCount = 50
   private var elements: [JSON] = []
   private var timer: Timer?
-  private unowned let network: Network
-  private unowned let configManager: ConfigManager
+
+  private let factory: DependencyContainer
+
+  private var network: Network {
+    return factory.network
+  }
+
+  private var configManager: ConfigManager {
+    return factory.configManager
+  }
 
   @MainActor
   private var resignActiveObserver: AnyCancellable?
@@ -26,12 +34,8 @@ actor EventsQueue {
     timer = nil
   }
 
-  init(
-    network: Network,
-    configManager: ConfigManager
-  ) {
-    self.network = network
-    self.configManager = configManager
+  init(factory: DependencyContainer) {
+    self.factory = factory
     Task { [weak self] in
       await self?.setupTimer()
       await self?.addObserver()

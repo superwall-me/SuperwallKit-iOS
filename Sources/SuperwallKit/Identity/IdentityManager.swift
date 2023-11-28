@@ -96,18 +96,24 @@ class IdentityManager {
   private let queue = DispatchQueue(label: "com.superwall.identitymanager")
   private let group = DispatchGroup()
 
-  private unowned let deviceHelper: DeviceHelper
-  private unowned let storage: Storage
-  private unowned let configManager: ConfigManager
+  private var deviceHelper: DeviceHelper {
+    return factory.deviceHelper
+  }
 
-  init(
-    deviceHelper: DeviceHelper,
-    storage: Storage,
-    configManager: ConfigManager
-  ) {
-    self.deviceHelper = deviceHelper
-    self.storage = storage
-    self.configManager = configManager
+  private var storage: Storage {
+    return factory.storage
+  }
+
+  private var configManager: ConfigManager {
+    return factory.configManager
+  }
+
+  private let factory: DependencyContainer
+
+  init(factory: DependencyContainer) {
+    self.factory = factory
+
+    let storage = factory.storage
     self._appUserId = storage.get(AppUserId.self)
 
     var extraAttributes: [String: Any] = [:]

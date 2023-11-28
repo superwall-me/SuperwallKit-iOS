@@ -47,7 +47,10 @@ extension PaywallRequestManager {
         fromProducts: result.products,
         productsById: result.productsById,
         isFreeTrialAvailableOverride: request.overrides.isFreeTrial,
-        isFreeTrialAvailable: storeKitManager.isFreeTrialAvailable(for:)
+        isFreeTrialAvailable: { [weak self] product in
+          guard let self else { return false }
+          return await receiptManager.isFreeTrialAvailable(for: product)
+        }
       )
       paywall.swProducts = outcome.orderedSwProducts
       paywall.productVariables = outcome.productVariables

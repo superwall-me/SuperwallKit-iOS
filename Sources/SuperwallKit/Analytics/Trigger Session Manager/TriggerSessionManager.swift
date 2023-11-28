@@ -17,12 +17,12 @@ actor TriggerSessionManager {
   /// The active trigger session.
   var activeTriggerSession: TriggerSession?
 
-  private unowned let storage: Storage
-  private unowned let configManager: ConfigManager
-  private unowned let appSessionManager: AppSessionManager
-  private unowned let identityManager: IdentityManager
-  private unowned let delegate: SessionEventsDelegate
-  private unowned let sessionEventsManager: SessionEventsManager
+  private let storage: Storage
+  private let configManager: ConfigManager
+  private let appSessionManager: AppSessionManager
+  private let identityManager: IdentityManager
+  private let delegate: SessionEventsDelegate
+  private let sessionEventsManager: SessionEventsManager
 
   /// A local count for transactions used within the trigger session.
   private var transactionCount: TriggerSession.Transaction.Count?
@@ -132,7 +132,7 @@ actor TriggerSessionManager {
   ///   - presentationInfo: Information about the paywall presentation.
   ///   - presentingViewController: What view the paywall will be presented on, if any.
   ///   - paywall: The response from the server associated with the paywall
-  func activateSession(
+  @discardableResult func activateSession(
     for presentationInfo: PresentationInfo,
     on presentingViewController: UIViewController? = nil,
     paywall: Paywall? = nil,

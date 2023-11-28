@@ -26,22 +26,27 @@ final class ProductPurchaserSK1: NSObject {
   private let restoration = Restoration()
 
   // MARK: Dependencies
-  private weak var storeKitManager: StoreKitManager?
-  private weak var sessionEventsManager: SessionEventsManager?
-  private let factory: StoreTransactionFactory
+  private var storeKitManager: StoreKitManager {
+    return factory.storeKitManager
+  }
+
+  private var receiptManager: ReceiptManager {
+    return factory.receiptManager
+  }
+
+  private var sessionEventsManager: SessionEventsManager {
+    return factory.sessionEventsManager
+  }
+
+  private let factory: DependencyContainer
 
   deinit {
     SKPaymentQueue.default().remove(self)
   }
 
-  init(
-    storeKitManager: StoreKitManager,
-    sessionEventsManager: SessionEventsManager,
-    factory: StoreTransactionFactory
-  ) {
-    self.storeKitManager = storeKitManager
-    self.sessionEventsManager = sessionEventsManager
+  init(factory: DependencyContainer) {
     self.factory = factory
+
     super.init()
     SKPaymentQueue.default().add(self)
   }
@@ -173,7 +178,8 @@ extension ProductPurchaserSK1: SKPaymentTransactionObserver {
     // Only continue if using internal purchase controller. The transaction may be
     // readded to the queue if finishing fails so we need to make sure
     // we can re-finish the transaction.
-    if storeKitManager?.purchaseController.hasExternalPurchaseController == true {
+    let isUsingInternalPurchaseController = !factory.makeHasExternalPurchaseController()
+    guard isUsingInternalPurchaseController == true else {
       return
     }
 
@@ -253,14 +259,14 @@ extension ProductPurchaserSK1: SKPaymentTransactionObserver {
       return
     }
     SKPaymentQueue.default().finishTransaction(transaction)
-    guard let product = await storeKitManager?.productsById[transaction.payment.productIdentifier] else {
+    guard let product = await storeKitManager.productsById[transaction.payment.productIdentifier] else {
       return
     }
     guard isPaywallPresented else {
       return
     }
 
-    await sessionEventsManager?.triggerSession.trackTransactionRestoration(
+    await sessionEventsManager.triggerSession.trackTransactionRestoration(
       withId: transaction.transactionIdentifier,
       product: product
     )
@@ -286,7 +292,7 @@ extension ProductPurchaserSK1: SKPaymentTransactionObserver {
   /// Sends the transaction to the backend.
   private func record(_ transaction: SKPaymentTransaction) async {
     let storeTransaction = await factory.makeStoreTransaction(from: transaction)
-    await sessionEventsManager?.enqueue(storeTransaction)
+    await sessionEventsManager.enqueue(storeTransaction)
   }
 
   /// Loads purchased products in the StoreKitManager if a purchase or restore has occurred.
@@ -296,6 +302,6 @@ extension ProductPurchaserSK1: SKPaymentTransactionObserver {
     ) == nil {
       return
     }
-    await storeKitManager?.loadPurchasedProducts()
+    await receiptManager.loadPurchasedProducts()
   }
 }

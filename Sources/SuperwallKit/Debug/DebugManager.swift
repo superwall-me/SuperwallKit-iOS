@@ -12,14 +12,13 @@ final class DebugManager {
   @MainActor var viewController: DebugViewController?
 	var isDebuggerLaunched = false
 
-  private unowned let storage: Storage
-  private unowned let factory: ViewControllerFactory
+  private var storage: Storage {
+    return factory.storage
+  }
+  private let factory: DependencyContainer
 
-  init(
-    storage: Storage,
-    factory: ViewControllerFactory
+  init(factory: DependencyContainer
   ) {
-    self.storage = storage
     self.factory = factory
   }
 

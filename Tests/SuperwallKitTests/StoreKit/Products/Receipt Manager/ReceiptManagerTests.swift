@@ -10,26 +10,21 @@ import XCTest
 @testable import SuperwallKit
 
 class ReceiptManagerTests: XCTestCase {
-  let dependencyContainer = DependencyContainer()
-  lazy var purchaseController = InternalPurchaseController(
-    factory: dependencyContainer,
-    swiftPurchaseController: nil,
-    objcPurchaseController: nil
-  )
-
   func test_loadPurchasedProducts_nilProducts() async {
     let product = MockSkProduct(subscriptionGroupIdentifier: "abc")
     let productsFetcher = ProductsFetcherSK1Mock(
       productCompletionResult: .success([StoreProduct(sk1Product: product)])
     )
+
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.productsFetcher = productsFetcher
+
     let getReceiptData: () -> Data = {
       return MockReceiptData.newReceipt
     }
-    let receiptManager = ReceiptManager(
-      delegate: productsFetcher,
-      purchaseController: purchaseController,
-      receiptData: getReceiptData
-    )
+    let receiptManager = ReceiptManager(factory: dependencyContainer, receiptData: getReceiptData)
+
+    dependencyContainer.receiptManager = receiptManager
 
     _ = await receiptManager.loadPurchasedProducts()
     let purchasedSubscriptionGroupIds = await receiptManager.purchasedSubscriptionGroupIds
@@ -40,14 +35,16 @@ class ReceiptManagerTests: XCTestCase {
     let productsFetcher = ProductsFetcherSK1Mock(
       productCompletionResult: .failure(TestError("error"))
     )
+
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.productsFetcher = productsFetcher
+
     let getReceiptData: () -> Data = {
       return MockReceiptData.newReceipt
     }
-    let receiptManager = ReceiptManager(
-      delegate: productsFetcher,
-      purchaseController: purchaseController,
-      receiptData: getReceiptData
-    )
+    let receiptManager = ReceiptManager(factory: dependencyContainer, receiptData: getReceiptData)
+
+    dependencyContainer.receiptManager = receiptManager
 
     _ = await receiptManager.loadPurchasedProducts()
     let purchasedSubscriptionGroupIds = await receiptManager.purchasedSubscriptionGroupIds

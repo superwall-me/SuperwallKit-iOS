@@ -12,10 +12,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_handleTemplateParams() async {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -36,10 +33,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_onReady() async {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -61,10 +55,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_close() {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -83,10 +74,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_openUrl() {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -107,10 +95,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_openUrlInSafari() {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -131,10 +116,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_openDeepLink() {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -155,10 +137,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_restore() {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -177,10 +156,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_purchaseProduct() {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -200,10 +176,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
   @MainActor
   func test_custom() {
     let dependencyContainer = DependencyContainer()
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = FakeWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,

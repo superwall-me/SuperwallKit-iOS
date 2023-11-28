@@ -8,22 +8,30 @@
 import Foundation
 import StoreKit
 
+protocol ReceiptDelegate {
+  func receiptLoaded(purchases: Set<InAppPurchase>) async
+}
+
 actor ReceiptManager: NSObject {
+  private let factory: DependencyContainer
+
   var purchasedSubscriptionGroupIds: Set<String>?
   private var purchases: Set<InAppPurchase> = []
   private var receiptRefreshCompletion: ((Bool) -> Void)?
-  private weak var delegate: ProductsFetcherSK1?
   private let receiptData: () -> Data?
-  private let purchaseController: InternalPurchaseController
+  private weak var delegate: ProductsFetcherSK1? {
+    return factory.productsFetcher
+  }
+  private var receiptDelegate: ReceiptDelegate? {
+    return factory.purchaseController as? ReceiptDelegate
+  }
 
   init(
-    delegate: ProductsFetcherSK1,
-    purchaseController: InternalPurchaseController,
+    factory: DependencyContainer,
     receiptData: @escaping () -> Data? = ReceiptLogic.getReceiptData
   ) {
-    self.delegate = delegate
+    self.factory = factory
     self.receiptData = receiptData
-    self.purchaseController = purchaseController
   }
 
   /// Loads purchased products from the receipt, storing the purchased subscription group identifiers,
@@ -34,14 +42,14 @@ actor ReceiptManager: NSObject {
       let payload = ReceiptLogic.getPayload(using: receiptData),
       let delegate = delegate
     else {
-      await purchaseController.syncSubscriptionStatus(withPurchases: [])
+      await receiptDelegate?.receiptLoaded(purchases: [])
       return nil
     }
 
     let purchases = payload.purchases
     self.purchases = purchases
 
-    await purchaseController.syncSubscriptionStatus(withPurchases: purchases)
+    await receiptDelegate?.receiptLoaded(purchases: purchases)
 
     let purchasedProductIds = Set(purchases.map { $0.productIdentifier })
 
@@ -83,7 +91,10 @@ actor ReceiptManager: NSObject {
     return !purchasedSubsGroupIds.contains(subsGroupId)
   }
 
-  /// Refreshes the receipt.
+  /// This refreshes the device receipt.
+  ///
+  /// - Warning: This will prompt the user to log in, so only do this on
+  /// when restoring or after purchasing.
   func refreshReceipt() async {
     Logger.debug(
       logLevel: .debug,

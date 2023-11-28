@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 23/12/2022.
 //
@@ -16,115 +16,120 @@ import StoreKit
 /// This conforms to protocol factory methods which can be used to make objects that have
 /// dependencies injected into them.
 ///
-/// Objects only need `unowned` references to the dependencies injected into them because
-/// `DependencyContainer` is owned by the `Superwall` class.
-final class DependencyContainer {
-  // swiftlint:disable implicitly_unwrapped_optional
-  var configManager: ConfigManager!
-  var identityManager: IdentityManager!
-  var storeKitManager: StoreKitManager!
-  var appSessionManager: AppSessionManager!
-  var sessionEventsManager: SessionEventsManager!
-  var storage: Storage!
-  var network: Network!
-  var paywallManager: PaywallManager!
-  var paywallRequestManager: PaywallRequestManager!
-  var deviceHelper: DeviceHelper!
-  var queue: EventsQueue!
-  var debugManager: DebugManager!
-  var api: Api!
-  var transactionManager: TransactionManager!
-  var delegateAdapter: SuperwallDelegateAdapter!
-  // swiftlint:enable implicitly_unwrapped_optional
+class DependencyContainer {
+  lazy var storeKitManager: StoreKitManager = self.makeStoreKitManager()
+  lazy var receiptManager: ReceiptManager = self.makeReceiptManager()
+  lazy var storage: Storage = self.makeStorage()
+  lazy var network: Network = self.makeNetwork()
+  lazy var paywallRequestManager: PaywallRequestManager = self.makePaywallRequestManager()
+  lazy var paywallManager: PaywallManager = self.makePaywallManager()
+  lazy var configManager: ConfigManager = self.makeConfigManager()
+  lazy var api: Api = self.makeApi()
+  lazy var deviceHelper: DeviceHelper = self.makeDeviceHelper()
+  lazy var queue: EventsQueue = self.makeQueue()
+  lazy var identityManager: IdentityManager = self.makeIdentityManager()
+  lazy var sessionEventsManager: SessionEventsManager = self.makeSessionEventsManager()
+  lazy var productsFetcher: ProductsFetcherSK1 = self.makeProductsFetcher()
+  lazy var productsPurchaser: ProductPurchaserSK1 = self.makeProductsPurchaser()
+  lazy var purchaseController: PurchaseController = self.makePurchaseController()
+  lazy var appSessionManager: AppSessionManager = self.makeAppSessionManager()
+  lazy var debugManager: DebugManager = self.makeDebugManager()
+  lazy var transactionManager: TransactionManager = self.makeTransactionManager()
+  lazy var delegateAdapter: SuperwallDelegateAdapter = self.makeDelegateAdapter()
+
+  let options: SuperwallOptions
+  private let controller: PurchaseController?
 
   init(
-    swiftPurchaseController: PurchaseController? = nil,
-    objcPurchaseController: PurchaseControllerObjc? = nil,
+    purchaseController controller: PurchaseController? = nil,
     options: SuperwallOptions? = nil
   ) {
-    let purchaseController = InternalPurchaseController(
-      factory: self,
-      swiftPurchaseController: swiftPurchaseController,
-      objcPurchaseController: objcPurchaseController
-    )
-    storeKitManager = StoreKitManager(purchaseController: purchaseController)
-    delegateAdapter = SuperwallDelegateAdapter()
-    storage = Storage(factory: self)
-    network = Network(factory: self)
-
-    paywallRequestManager = PaywallRequestManager(
-      storeKitManager: storeKitManager,
-      network: network,
-      factory: self
-    )
-    paywallManager = PaywallManager(
-      factory: self,
-      paywallRequestManager: paywallRequestManager
-    )
-
-    configManager = ConfigManager(
-      options: options,
-      storeKitManager: storeKitManager,
-      storage: storage,
-      network: network,
-      paywallManager: paywallManager,
-      factory: self
-    )
-
-    api = Api(networkEnvironment: configManager.options.networkEnvironment)
-
-    deviceHelper = DeviceHelper(
-      api: api,
-      storage: storage,
-      factory: self
-    )
-
-    queue = EventsQueue(
-      network: network,
-      configManager: configManager
-    )
-
-    identityManager = IdentityManager(
-      deviceHelper: deviceHelper,
-      storage: storage,
-      configManager: configManager
-    )
-
-    sessionEventsManager = SessionEventsManager(
-      queue: SessionEventsQueue(
-        storage: storage,
-        network: network,
-        configManager: configManager
-      ),
-      storage: storage,
-      network: network,
-      configManager: configManager,
-      factory: self
-    )
-
-    // Must be after session events
-    appSessionManager = AppSessionManager(
-      configManager: configManager,
-      identityManager: identityManager,
-      storage: storage,
-      delegate: self
-    )
-
-    debugManager = DebugManager(
-      storage: storage,
-      factory: self
-    )
-
-    transactionManager = TransactionManager(
-      storeKitManager: storeKitManager,
-      sessionEventsManager: sessionEventsManager,
-      factory: self
-    )
-
-    // Initialise the product purchaser so that it can immediately start listening to transactions.
-    _ = storeKitManager.purchaseController.productPurchaser
+    self.controller = controller
+    self.options = options ?? SuperwallOptions()
   }
 }
+
+// MARK: - Factory
+
+extension DependencyContainer {
+  private func makeProductsFetcher() -> ProductsFetcherSK1 {
+    return ProductsFetcherSK1()
+  }
+
+  private func makeStoreKitManager() -> StoreKitManager {
+    return StoreKitManager(factory: self)
+  }
+
+  private func makeReceiptManager() -> ReceiptManager {
+    return ReceiptManager(factory: self)
+  }
+
+  private func makeStorage() -> Storage {
+    return Storage(factory: self)
+  }
+
+  private func makeNetwork() -> Network {
+    return Network(factory: self)
+  }
+
+  private func makePaywallRequestManager() -> PaywallRequestManager {
+    return PaywallRequestManager(factory: self)
+  }
+
+  private func makePaywallManager() -> PaywallManager {
+    return PaywallManager(factory: self)
+  }
+
+  private func makeConfigManager() -> ConfigManager {
+    return ConfigManager(options: options, factory: self)
+  }
+
+  private func makeApi() -> Api {
+    return Api(networkEnvironment: configManager.options.networkEnvironment)
+  }
+
+  private func makeDeviceHelper() -> DeviceHelper {
+    return DeviceHelper(factory: self)
+  }
+
+  private func makeQueue() -> EventsQueue {
+    return EventsQueue(factory: self)
+  }
+
+  private func makeIdentityManager() -> IdentityManager {
+    return IdentityManager(factory: self)
+  }
+
+  private func makeSessionEventsManager() -> SessionEventsManager {
+    return SessionEventsManager(factory: self)
+  }
+
+  private func makeProductsPurchaser() -> ProductPurchaserSK1 {
+    return ProductPurchaserSK1(factory: self)
+  }
+
+  private func makePurchaseController() -> PurchaseController {
+    return controller ?? AutomaticPurchaseController(factory: self)
+  }
+
+  private func makeAppSessionManager() -> AppSessionManager {
+    return AppSessionManager(factory: self)
+  }
+
+  private func makeDebugManager() -> DebugManager {
+    return DebugManager(factory: self)
+  }
+
+  private func makeTransactionManager() -> TransactionManager {
+    return TransactionManager(factory: self)
+  }
+
+  private func makeDelegateAdapter() -> SuperwallDelegateAdapter {
+    return SuperwallDelegateAdapter()
+  }
+}
+
+// TODO: Consider making the below extensions protocols instead of factories
 
 // MARK: - IdentityInfoFactory
 extension DependencyContainer: IdentityInfoFactory {
@@ -193,10 +198,7 @@ extension DependencyContainer: ViewControllerFactory {
     withCache cache: PaywallViewControllerCache?,
     delegate: PaywallViewControllerDelegateAdapter?
   ) -> PaywallViewController {
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: sessionEventsManager,
-      factory: self
-    )
+    let messageHandler = PaywallMessageHandler(factory: self)
     let webView = SWWebView(
       isMac: deviceHelper.isMac,
       sessionEventsManager: sessionEventsManager,
@@ -222,14 +224,7 @@ extension DependencyContainer: ViewControllerFactory {
 
   @MainActor
   func makeDebugViewController(withDatabaseId id: String?) -> DebugViewController {
-    let viewController = DebugViewController(
-      storeKitManager: storeKitManager,
-      network: network,
-      paywallRequestManager: paywallRequestManager,
-      paywallManager: paywallManager,
-      debugManager: debugManager,
-      factory: self
-    )
+    let viewController = DebugViewController(factory: self)
     viewController.paywallDatabaseId = id
     viewController.modalPresentationStyle = .overFullScreen
     return viewController
@@ -423,17 +418,6 @@ extension DependencyContainer: StoreTransactionFactory {
   }
 }
 
-// MARK: - Product Purchaser Factory
-extension DependencyContainer: ProductPurchaserFactory {
-  func makeSK1ProductPurchaser() -> ProductPurchaserSK1 {
-    return ProductPurchaserSK1(
-      storeKitManager: storeKitManager,
-      sessionEventsManager: sessionEventsManager,
-      factory: self
-    )
-  }
-}
-
 // MARK: - Options Factory
 extension DependencyContainer: OptionsFactory {
   func makeSuperwallOptions() -> SuperwallOptions {
@@ -451,7 +435,7 @@ extension DependencyContainer: TriggerFactory {
 // MARK: - Purchase Controller Factory
 extension DependencyContainer: HasExternalPurchaseControllerFactory {
   func makeHasExternalPurchaseController() -> Bool {
-    return storeKitManager.purchaseController.hasExternalPurchaseController
+    return purchaseController.isInternal == false
   }
 }
 
@@ -472,7 +456,7 @@ extension DependencyContainer: ComputedPropertyRequestsFactory {
 // MARK: - Purchased Transactions Factory
 extension DependencyContainer: PurchasedTransactionsFactory {
   func makePurchasingCoordinator() -> PurchasingCoordinator {
-    return storeKitManager.purchaseController.productPurchaser.coordinator
+    return productsPurchaser.coordinator
   }
 }
 
@@ -485,3 +469,4 @@ extension DependencyContainer: UserAttributesEventFactory {
     )
   }
 }
+

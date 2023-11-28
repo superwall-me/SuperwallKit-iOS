@@ -12,16 +12,9 @@ import XCTest
 class StorageTests: XCTestCase {
   func test_saveConfirmedAssignments() {
     let dependencyContainer = DependencyContainer()
-    let storage = Storage(factory: dependencyContainer)
-    let network = NetworkMock(factory: dependencyContainer)
-    let configManager = ConfigManager(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: storage,
-      network: network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let storage = dependencyContainer.storage
+    let network = dependencyContainer.network
+    let configManager = dependencyContainer.configManager
 
     let assignments: [Experiment.ID: Experiment.Variant] = [
       "123": .init(id: "1", type: .treatment, paywallId: "23")

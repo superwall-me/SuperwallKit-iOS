@@ -19,10 +19,7 @@ final class SurveyManagerTests: XCTestCase {
     let expectation = expectation(description: "called completion block")
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -60,10 +57,7 @@ final class SurveyManagerTests: XCTestCase {
     let expectation = expectation(description: "called completion block")
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -102,10 +96,7 @@ final class SurveyManagerTests: XCTestCase {
     expectation.isInverted = true
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -143,10 +134,7 @@ final class SurveyManagerTests: XCTestCase {
     let expectation = expectation(description: "called completion block")
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -184,10 +172,7 @@ final class SurveyManagerTests: XCTestCase {
     let expectation = expectation(description: "called completion block")
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -225,10 +210,7 @@ final class SurveyManagerTests: XCTestCase {
     let expectation = expectation(description: "called completion block")
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -272,10 +254,7 @@ final class SurveyManagerTests: XCTestCase {
     let expectation = expectation(description: "called completion block")
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -322,10 +301,7 @@ final class SurveyManagerTests: XCTestCase {
     let expectation = expectation(description: "called completion block")
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -370,10 +346,7 @@ final class SurveyManagerTests: XCTestCase {
     expectation.isInverted = true
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,
@@ -422,10 +395,7 @@ final class SurveyManagerTests: XCTestCase {
     expectation.isInverted = true
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,

@@ -431,18 +431,17 @@ class DeviceHelper {
     return template.toDictionary()
   }
 
-  private unowned let storage: Storage
-  private unowned let factory: IdentityInfoFactory & LocaleIdentifierFactory
+  private var storage: Storage {
+    return factory.storage
+  }
 
-  init(
-    api: Api,
-    storage: Storage,
-    factory: IdentityInfoFactory & LocaleIdentifierFactory
-  ) {
-    self.storage = storage
-    self.appInstalledAtString = appInstallDate?.isoString ?? ""
+  private var factory: DependencyContainer
+
+  init(factory: DependencyContainer) {
     self.factory = factory
-    reachability = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, api.hostDomain)
+
+    self.appInstalledAtString = appInstallDate?.isoString ?? ""
+    reachability = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, factory.api.hostDomain)
     self.sdkVersionPadded = Self.makePaddedSdkVersion(using: sdkVersion)
   }
 }

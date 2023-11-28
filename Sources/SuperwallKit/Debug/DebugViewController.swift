@@ -120,26 +120,28 @@ final class DebugViewController: UIViewController {
   private var cancellable: AnyCancellable?
   private var initialLocaleIdentifier: String?
 
-  private unowned let storeKitManager: StoreKitManager
-  private unowned let network: Network
-  private unowned let paywallRequestManager: PaywallRequestManager
-  private unowned let paywallManager: PaywallManager
-  private unowned let debugManager: DebugManager
-  private let factory: RequestFactory & ViewControllerFactory
+  private var storeKitManager: StoreKitManager {
+    return factory.storeKitManager
+  }
 
-  init(
-    storeKitManager: StoreKitManager,
-    network: Network,
-    paywallRequestManager: PaywallRequestManager,
-    paywallManager: PaywallManager,
-    debugManager: DebugManager,
-    factory: RequestFactory & ViewControllerFactory
-  ) {
-    self.storeKitManager = storeKitManager
-    self.network = network
-    self.paywallRequestManager = paywallRequestManager
-    self.paywallManager = paywallManager
-    self.debugManager = debugManager
+  private var network: Network {
+    return factory.network
+  }
+
+  private var paywallRequestManager: PaywallRequestManager {
+    return factory.paywallRequestManager
+  }
+
+  private var paywallManager: PaywallManager {
+    return factory.paywallManager
+  }
+
+  private var debugManager: DebugManager {
+    return factory.debugManager
+  }
+  private let factory: DependencyContainer
+
+  init(factory: DependencyContainer) {
     self.factory = factory
     super.init(nibName: nil, bundle: nil)
   }

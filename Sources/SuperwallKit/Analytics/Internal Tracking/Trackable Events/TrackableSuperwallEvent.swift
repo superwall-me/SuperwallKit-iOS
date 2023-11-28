@@ -272,7 +272,7 @@ enum InternalSuperwallEvent {
     }
     let triggerName: String
     var customParameters: [String: Any] = [:]
-    unowned let sessionEventsManager: SessionEventsManager
+    let sessionEventsManager: SessionEventsManager
 
     func getSuperwallParameters() async -> [String: Any] {
       var params: [String: Any] = [

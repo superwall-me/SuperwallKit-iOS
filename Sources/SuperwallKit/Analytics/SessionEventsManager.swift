@@ -20,27 +20,28 @@ class SessionEventsManager {
   /// The trigger session manager.
   lazy var triggerSession = factory.makeTriggerSessionManager()
 
-  /// A queue of trigger session events that get sent to the server.
-  private let queue: SessionEnqueuable
-
   private var cancellables: [AnyCancellable] = []
 
-  private unowned let network: Network
-  private unowned let storage: Storage
-  private unowned let configManager: ConfigManager
-  private unowned let factory: TriggerSessionManagerFactory
+  /// A queue of trigger session events that get sent to the server.
+  private lazy var queue: SessionEnqueuable = {
+    return SessionEventsQueue(storage: storage, network: network, configManager: configManager)
+  }()
 
-  init(
-    queue: SessionEnqueuable,
-    storage: Storage,
-    network: Network,
-    configManager: ConfigManager,
-    factory: TriggerSessionManagerFactory
-  ) {
-    self.queue = queue
-    self.storage = storage
-    self.network = network
-    self.configManager = configManager
+  private var network: Network {
+    return factory.network
+  }
+
+  private var storage: Storage {
+    return factory.storage
+  }
+
+  private var configManager: ConfigManager {
+    return factory.configManager
+  }
+
+  private var factory: DependencyContainer
+
+  init(factory: DependencyContainer) {
     self.factory = factory
 
     Task {

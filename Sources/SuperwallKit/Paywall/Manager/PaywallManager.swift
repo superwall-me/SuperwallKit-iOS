@@ -9,24 +9,23 @@ import Foundation
 import UIKit
 
 class PaywallManager {
+  let factory: DependencyContainer
+
   var presentedViewController: PaywallViewController? {
     return cache.activePaywallViewController
 	}
   private let queue = DispatchQueue(label: "com.superwall.paywallmanager")
-  private unowned let paywallRequestManager: PaywallRequestManager
-  private unowned let factory: ViewControllerFactory & CacheFactory & DeviceHelperFactory
+  private var paywallRequestManager: PaywallRequestManager {
+    return factory.paywallRequestManager
+  }
 
   private var cache: PaywallViewControllerCache {
     return queue.sync { _cache ?? createCache() }
   }
   private var _cache: PaywallViewControllerCache?
 
-  init(
-    factory: ViewControllerFactory & CacheFactory & DeviceHelperFactory,
-    paywallRequestManager: PaywallRequestManager
-  ) {
+  init(factory: DependencyContainer) {
     self.factory = factory
-    self.paywallRequestManager = paywallRequestManager
   }
 
   private func createCache() -> PaywallViewControllerCache {

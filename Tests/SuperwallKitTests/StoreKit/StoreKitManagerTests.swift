@@ -11,16 +11,9 @@ import XCTest
 import StoreKit
 
 class StoreKitManagerTests: XCTestCase {
-  let dependencyContainer = DependencyContainer()
-  lazy var purchaseController = InternalPurchaseController(
-    factory: dependencyContainer,
-    swiftPurchaseController: nil,
-    objcPurchaseController: nil
-  )
-
   func test_getProducts_primaryProduct() async {
     let dependencyContainer = DependencyContainer()
-    let manager = dependencyContainer.storeKitManager!
+    let manager = dependencyContainer.storeKitManager
 
     let primary = MockSkProduct(productIdentifier: "abc")
     let substituteProducts = PaywallProducts(
@@ -39,7 +32,7 @@ class StoreKitManagerTests: XCTestCase {
 
   func test_getProducts_primaryAndTertiaryProduct() async {
     let dependencyContainer = DependencyContainer()
-    let manager = dependencyContainer.storeKitManager!
+    let manager = dependencyContainer.storeKitManager
 
     let primary = MockSkProduct(productIdentifier: "abc")
     let tertiary = MockSkProduct(productIdentifier: "def")
@@ -64,7 +57,7 @@ class StoreKitManagerTests: XCTestCase {
 
   func test_getProducts_primarySecondaryTertiaryProduct() async {
     let dependencyContainer = DependencyContainer()
-    let manager = dependencyContainer.storeKitManager!
+    let manager = dependencyContainer.storeKitManager
 
     let primary = MockSkProduct(productIdentifier: "abc")
     let secondary = MockSkProduct(productIdentifier: "def")
@@ -96,11 +89,11 @@ class StoreKitManagerTests: XCTestCase {
   func test_getProducts_substitutePrimaryProduct_oneResponseProduct() async {
     let productsResult: Result<Set<StoreProduct>, Error> = .success([])
     let productsFetcher = ProductsFetcherSK1Mock(productCompletionResult: productsResult)
-    let manager = StoreKitManager(
-      purchaseController: purchaseController,
-      productsFetcher: productsFetcher
-    )
 
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.productsFetcher = productsFetcher
+
+    let manager = dependencyContainer.storeKitManager
     let primary = MockSkProduct(productIdentifier: "abc")
     let substituteProducts = PaywallProducts(
       primary: StoreProduct(sk1Product: primary)
@@ -118,15 +111,18 @@ class StoreKitManagerTests: XCTestCase {
   }
 
   func test_getProducts_substitutePrimaryProduct_twoResponseProducts() async {
+
+
     let responseProduct2 = MockSkProduct(productIdentifier: "2")
     let productsResult: Result<Set<StoreProduct>, Error> = .success([
       StoreProduct(sk1Product: responseProduct2)
     ])
     let productsFetcher = ProductsFetcherSK1Mock(productCompletionResult: productsResult)
-    let manager = StoreKitManager(
-      purchaseController: purchaseController,
-      productsFetcher: productsFetcher
-    )
+
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.productsFetcher = productsFetcher
+
+    let manager = dependencyContainer.storeKitManager
 
     let primary = MockSkProduct(productIdentifier: "abc")
     let substituteProducts = PaywallProducts(

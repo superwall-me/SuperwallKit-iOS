@@ -500,7 +500,6 @@ final class ConfigLogicTests: XCTestCase {
 
   func test_getStaticPaywall_deviceLocaleSpecifiedInConfig() {
     let locale = "en_GB"
-    let dependencyContainer = DependencyContainer()
     let response = ConfigLogic.getStaticPaywall(
       withId: "abc",
       config: .stub()

@@ -25,9 +25,14 @@ enum RuleMatchOutcome {
 }
 
 struct RuleLogic {
-  unowned let configManager: ConfigManager
-  unowned let storage: Storage
-  unowned let factory: RuleAttributesFactory
+  var configManager: ConfigManager {
+    return factory.configManager
+  }
+
+  var storage: Storage {
+    return factory.storage
+  }
+  let factory: DependencyContainer
 
   /// Determines the outcome of an event based on given triggers. It also determines
   /// whether there is an assignment to confirm based on the rule.
@@ -132,11 +137,7 @@ struct RuleLogic {
     for event: EventData,
     withTrigger trigger: Trigger
   ) async -> RuleMatchOutcome {
-    let expressionEvaluator = ExpressionEvaluator(
-      storage: storage,
-      factory: factory
-    )
-
+    let expressionEvaluator = ExpressionEvaluator(factory: factory)
     var unmatchedRules: [UnmatchedRule] = []
 
     for rule in trigger.rules {

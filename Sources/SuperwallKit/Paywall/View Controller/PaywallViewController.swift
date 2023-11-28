@@ -141,10 +141,16 @@ public class PaywallViewController: UIViewController, LoadingDelegate {
   /// paywall presentation.
   private var unsavedOccurrence: TriggerRuleOccurrence?
 
-  private unowned let factory: TriggerSessionManagerFactory & TriggerFactory
-  private unowned let storage: Storage
-  private unowned let deviceHelper: DeviceHelper
-  private unowned let paywallManager: PaywallManager
+  private let factory: DependencyContainer
+  private var storage: Storage {
+    return factory.storage
+  }
+  private var deviceHelper: DeviceHelper {
+    return factory.deviceHelper
+  }
+  private var paywallManager: PaywallManager {
+    return factory.paywallManager
+  }
   private weak var cache: PaywallViewControllerCache?
 
 	// MARK: - View Lifecycle
@@ -154,25 +160,22 @@ public class PaywallViewController: UIViewController, LoadingDelegate {
     eventDelegate: PaywallViewControllerEventDelegate? = nil,
     delegate: PaywallViewControllerDelegateAdapter? = nil,
     deviceHelper: DeviceHelper,
-    factory: TriggerSessionManagerFactory & TriggerFactory,
+    factory: DependencyContainer,
     storage: Storage,
     paywallManager: PaywallManager,
     webView: SWWebView,
     cache: PaywallViewControllerCache?
   ) {
+    self.factory = factory
     self.cache = cache
     self.cacheKey = PaywallCacheLogic.key(
       identifier: paywall.identifier,
       locale: deviceHelper.locale
     )
-    self.deviceHelper = deviceHelper
 		self.eventDelegate = eventDelegate
     self.delegate = delegate
 
-    self.factory = factory
-    self.storage = storage
     self.paywall = paywall
-    self.paywallManager = paywallManager
     self.webView = webView
 
     presentationStyle = paywall.presentation.style
@@ -225,7 +228,7 @@ public class PaywallViewController: UIViewController, LoadingDelegate {
   nonisolated private func trackOpen() async {
     let triggerSessionManager = factory.getTriggerSessionManager()
     await triggerSessionManager.trackPaywallOpen()
-    storage.trackPaywallOpen()
+    await storage.trackPaywallOpen()
     await webView.messageHandler.handle(.paywallOpen)
     let trackedEvent = await InternalSuperwallEvent.PaywallOpen(paywallInfo: info)
     await Superwall.shared.track(trackedEvent)

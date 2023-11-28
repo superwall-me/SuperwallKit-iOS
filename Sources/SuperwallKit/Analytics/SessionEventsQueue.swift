@@ -40,9 +40,9 @@ actor SessionEventsQueue: SessionEnqueuable {
   private var willResignActiveObserver: AnyCancellable?
   private lazy var lastTwentySessions = LimitedQueue<TriggerSession>(limit: 20)
   private lazy var lastTwentyTransactions = LimitedQueue<StoreTransaction>(limit: 20)
-  private unowned let storage: Storage
-  private unowned let network: Network
-  private unowned let configManager: ConfigManager
+  private let storage: Storage
+  private let network: Network
+  private let configManager: ConfigManager
 
   deinit {
     timer?.invalidate()

@@ -26,7 +26,7 @@ class ConfigManager {
   }
 
   /// Options for configuring the SDK.
-  var options = SuperwallOptions()
+  var options: SuperwallOptions
 
   /// A dictionary of triggers by their event name.
   @DispatchQueueBacked
@@ -38,37 +38,42 @@ class ConfigManager {
   @DispatchQueueBacked
   var unconfirmedAssignments: [Experiment.ID: Experiment.Variant] = [:]
 
-  private unowned let storeKitManager: StoreKitManager
-  private unowned let storage: Storage
-  private unowned let network: Network
-  private unowned let paywallManager: PaywallManager
+  private var storeKitManager: StoreKitManager {
+    return factory.storeKitManager
+  }
+
+  private var receiptManager: ReceiptManager {
+    return factory.receiptManager
+  }
+
+  private var storage: Storage {
+    return factory.storage
+  }
+
+  private var network: Network {
+    return factory.network
+  }
+
+  private var paywallManager: PaywallManager {
+    return factory.paywallManager
+  }
 
   /// A task that is non-`nil` when preloading all paywalls.
   private var currentPreloadingTask: Task<Void, Never>?
 
-  private let factory: RequestFactory & RuleAttributesFactory
+  private let factory: DependencyContainer
 
   init(
-    options: SuperwallOptions?,
-    storeKitManager: StoreKitManager,
-    storage: Storage,
-    network: Network,
-    paywallManager: PaywallManager,
-    factory: RequestFactory & RuleAttributesFactory
+    options: SuperwallOptions,
+    factory: DependencyContainer
   ) {
-    if let options = options {
-      self.options = options
-    }
-    self.storeKitManager = storeKitManager
-    self.storage = storage
-    self.network = network
-    self.paywallManager = paywallManager
+    self.options = options
     self.factory = factory
   }
 
   func fetchConfiguration() async {
     do {
-      await storeKitManager.loadPurchasedProducts()
+      await receiptManager.loadPurchasedProducts()
 
       let config = try await network.getConfig { [weak self] in
         self?.configState.send(.retrying)
@@ -238,10 +243,7 @@ class ConfigManager {
         .throwableAsync() else {
         return
       }
-      let expressionEvaluator = ExpressionEvaluator(
-        storage: storage,
-        factory: factory
-      )
+      let expressionEvaluator = ExpressionEvaluator(factory: factory)
       let triggers = ConfigLogic.filterTriggers(
         config.triggers,
         removing: config.preloadingDisabled

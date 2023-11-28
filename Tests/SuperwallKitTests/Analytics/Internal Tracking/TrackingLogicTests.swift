@@ -296,10 +296,7 @@ final class TrackingLogicTests: XCTestCase {
   func testDidStartNewSession_canTriggerPaywall_paywallAlreadyPresented() {
     let dependencyContainer = DependencyContainer()
 
-    let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
-      factory: dependencyContainer
-    )
+    let messageHandler = PaywallMessageHandler(factory: dependencyContainer)
     let webView = SWWebView(
       isMac: false,
       sessionEventsManager: dependencyContainer.sessionEventsManager,

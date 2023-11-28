@@ -12,12 +12,7 @@ import XCTest
 class AppSessionManagerTests: XCTestCase {
   lazy var dependencyContainer: DependencyContainer = {
     let dependencyContainer = DependencyContainer()
-    appSessionManager = AppSessionManager(
-      configManager: dependencyContainer.configManager,
-      identityManager: dependencyContainer.identityManager,
-      storage: dependencyContainer.storage,
-      delegate: delegate
-    )
+    appSessionManager = AppSessionManager(factory: dependencyContainer)
     dependencyContainer.appSessionManager = appSessionManager
     return dependencyContainer
   }()

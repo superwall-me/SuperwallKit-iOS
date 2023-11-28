@@ -26,14 +26,12 @@ protocol PaywallMessageHandlerDelegate: AnyObject {
 @MainActor
 final class PaywallMessageHandler: WebEventDelegate {
   weak var delegate: PaywallMessageHandlerDelegate?
-  private unowned let sessionEventsManager: SessionEventsManager
-  private let factory: VariablesFactory
+  private var sessionEventsManager: SessionEventsManager {
+    return factory.sessionEventsManager
+  }
+  private let factory: DependencyContainer
 
-  init(
-    sessionEventsManager: SessionEventsManager,
-    factory: VariablesFactory
-  ) {
-    self.sessionEventsManager = sessionEventsManager
+  init(factory: DependencyContainer) {
     self.factory = factory
   }
 

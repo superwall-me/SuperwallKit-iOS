@@ -274,7 +274,7 @@ struct Paywall: Decodable {
 
   func getInfo(
     fromEvent: EventData?,
-    factory: TriggerSessionManagerFactory
+    factory: DependencyContainer
   ) -> PaywallInfo {
     return PaywallInfo(
       databaseId: databaseId,

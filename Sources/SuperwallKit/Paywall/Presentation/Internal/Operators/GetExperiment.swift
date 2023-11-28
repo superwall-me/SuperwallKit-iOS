@@ -73,7 +73,7 @@ extension Superwall {
       return
     }
     let sessionEventsManager = dependencyContainer.sessionEventsManager
-    await sessionEventsManager?.triggerSession.activateSession(
+    await sessionEventsManager.triggerSession.activateSession(
       for: request.presentationInfo,
       on: request.presenter,
       triggerResult: rulesOutcome.triggerResult

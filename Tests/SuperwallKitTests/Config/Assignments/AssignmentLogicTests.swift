@@ -39,19 +39,18 @@ class AssignmentLogicTests: XCTestCase {
     )
     let triggers = [eventName: trigger]
 
+    let storage = StorageMock()
+
     let dependencyContainer = DependencyContainer()
+    dependencyContainer.storage = storage
+
     let variant = variantOption.toVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
-    let storage = StorageMock()
 
     // MARK: When
-    let assignmentLogic = RuleLogic(
-      configManager: dependencyContainer.configManager,
-      storage: storage,
-      factory: dependencyContainer
-    )
+    let assignmentLogic = RuleLogic(factory: dependencyContainer)
     let outcome = await assignmentLogic.evaluateRules(
       forEvent: eventData,
       triggers: triggers
@@ -103,17 +102,17 @@ class AssignmentLogicTests: XCTestCase {
     )
     let triggers = [eventName: trigger]
 
+    let storage = StorageMock()
+
     let dependencyContainer = DependencyContainer()
+    dependencyContainer.storage = storage
+
     let variant = variantOption.toVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
-    let storage = StorageMock()
-    let assignmentLogic = RuleLogic(
-      configManager: dependencyContainer.configManager,
-      storage: storage,
-      factory: dependencyContainer
-    )
+
+    let assignmentLogic = RuleLogic(factory: dependencyContainer)
 
     // MARK: When
     let outcome = await assignmentLogic.evaluateRules(
@@ -168,14 +167,13 @@ class AssignmentLogicTests: XCTestCase {
     )
     let triggers = [eventName: trigger]
 
-    let dependencyContainer = DependencyContainer()
     let variant = variantOption.toVariant()
     let storage = StorageMock(confirmedAssignments: [rawExperiment.id: variant])
-    let assignmentLogic = RuleLogic(
-      configManager: dependencyContainer.configManager,
-      storage: storage,
-      factory: dependencyContainer
-    )
+
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.storage = storage
+
+    let assignmentLogic = RuleLogic(factory: dependencyContainer)
 
     // MARK: When
     let outcome = await assignmentLogic.evaluateRules(
@@ -226,20 +224,19 @@ class AssignmentLogicTests: XCTestCase {
     )
     let triggers = [eventName: trigger]
 
-    let dependencyContainer = DependencyContainer()
     let variant = variantOption.toVariant()
     let variant2 = variantOption
       .setting(\.paywallId, to: "123")
       .toVariant()
     let storage = StorageMock(confirmedAssignments: [rawExperiment.id: variant])
+
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.storage = storage
+
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant2
     ]
-    let assignmentLogic = RuleLogic(
-      configManager: dependencyContainer.configManager,
-      storage: storage,
-      factory: dependencyContainer
-    )
+    let assignmentLogic = RuleLogic(factory: dependencyContainer)
 
     // MARK: When
     let outcome = await assignmentLogic.evaluateRules(
@@ -290,17 +287,16 @@ class AssignmentLogicTests: XCTestCase {
     )
     let triggers = [eventName: trigger]
 
-    let dependencyContainer = DependencyContainer()
     let storage = StorageMock()
+
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.storage = storage
+
     let variant = variantOption.toVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
-    let assignmentLogic = RuleLogic(
-      configManager: dependencyContainer.configManager,
-      storage: storage,
-      factory: dependencyContainer
-    )
+    let assignmentLogic = RuleLogic(factory: dependencyContainer)
 
     // MARK: When
     let outcome = await assignmentLogic.evaluateRules(
@@ -346,17 +342,16 @@ class AssignmentLogicTests: XCTestCase {
     )
     let triggers = [eventName: trigger]
 
-    let dependencyContainer = DependencyContainer()
     let storage = StorageMock()
+
+    let dependencyContainer = DependencyContainer()
+    dependencyContainer.storage = storage
+
     let variant = variantOption.toVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
-    let assignmentLogic = RuleLogic(
-      configManager: dependencyContainer.configManager,
-      storage: storage,
-      factory: dependencyContainer
-    )
+    let assignmentLogic = RuleLogic(factory: dependencyContainer)
 
     // MARK: When
     let outcome = await assignmentLogic.evaluateRules(

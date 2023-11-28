@@ -117,7 +117,7 @@ extension Superwall {
     triggerResult: InternalTriggerResult
   ) async -> String? {
     let sessionEventsManager = dependencyContainer.sessionEventsManager
-    return await sessionEventsManager?.triggerSession.activateSession(
+    return await sessionEventsManager.triggerSession.activateSession(
       for: request.presentationInfo,
       on: request.presenter,
       paywall: paywall,

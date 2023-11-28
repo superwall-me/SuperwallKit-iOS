@@ -184,14 +184,12 @@ public final class Superwall: NSObject, ObservableObject {
 
   private convenience init(
     apiKey: String,
-    swiftPurchaseController: PurchaseController? = nil,
-    objcPurchaseController: PurchaseControllerObjc? = nil,
+    purchaseController: PurchaseController? = nil,
     options: SuperwallOptions? = nil,
     completion: (() -> Void)?
   ) {
     let dependencyContainer = DependencyContainer(
-      swiftPurchaseController: swiftPurchaseController,
-      objcPurchaseController: objcPurchaseController,
+      purchaseController: purchaseController,
       options: options
     )
     self.init(dependencyContainer: dependencyContainer)
@@ -288,8 +286,7 @@ public final class Superwall: NSObject, ObservableObject {
     }
     superwall = Superwall(
       apiKey: apiKey,
-      swiftPurchaseController: purchaseController,
-      objcPurchaseController: nil,
+      purchaseController: purchaseController,
       options: options,
       completion: completion
     )
@@ -367,8 +364,7 @@ public final class Superwall: NSObject, ObservableObject {
     }
     superwall = Superwall(
       apiKey: apiKey,
-      swiftPurchaseController: nil,
-      objcPurchaseController: purchaseController,
+      purchaseController: purchaseController.flatMap({ PurchaseControllerObjcAdapter(objcController: $0) }),
       options: options,
       completion: completion
     )

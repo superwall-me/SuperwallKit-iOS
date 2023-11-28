@@ -11,23 +11,25 @@ import UIKit
 import Combine
 
 final class TransactionManager {
-  private unowned let storeKitManager: StoreKitManager
-  private unowned let sessionEventsManager: SessionEventsManager
-  typealias Factories = ProductPurchaserFactory
-    & OptionsFactory
-    & TriggerFactory
-    & StoreTransactionFactory
-    & DeviceHelperFactory
-    & PurchasedTransactionsFactory
-  private let factory: Factories
+  private var storeKitManager: StoreKitManager {
+    return factory.storeKitManager
+  }
 
-  init(
-    storeKitManager: StoreKitManager,
-    sessionEventsManager: SessionEventsManager,
-    factory: Factories
-  ) {
-    self.storeKitManager = storeKitManager
-    self.sessionEventsManager = sessionEventsManager
+  private var receiptManager: ReceiptManager {
+    return factory.receiptManager
+  }
+
+  private var purchaseController: PurchaseController {
+    return factory.purchaseController
+  }
+
+  private var sessionEventsManager: SessionEventsManager {
+    return factory.sessionEventsManager
+  }
+
+  private let factory: DependencyContainer
+
+  init(factory: DependencyContainer) {
     self.factory = factory
   }
 
@@ -109,7 +111,7 @@ final class TransactionManager {
 
     paywallViewController.loadingState = .loadingPurchase
 
-    let restorationResult = await storeKitManager.purchaseController.restorePurchases()
+    let restorationResult = await purchaseController.restorePurchases()
 
     let hasRestored = restorationResult == .restored
     let isUserSubscribed = Superwall.shared.subscriptionStatus == .active
@@ -178,7 +180,7 @@ final class TransactionManager {
     guard let sk1Product = product.sk1Product else {
       return .failed(PurchaseError.productUnavailable)
     }
-    return await storeKitManager.purchaseController.purchase(product: sk1Product)
+    return await purchaseController.purchase(product: sk1Product)
   }
 
   /// Cancels the transaction timeout when the application resigns active.
@@ -271,7 +273,7 @@ final class TransactionManager {
       await self.sessionEventsManager.enqueue(transaction)
     }
 
-    await storeKitManager.loadPurchasedProducts()
+    await receiptManager.loadPurchasedProducts()
 
     await trackTransactionDidSucceed(
       transaction,

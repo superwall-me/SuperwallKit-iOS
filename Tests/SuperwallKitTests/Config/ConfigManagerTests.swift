@@ -21,16 +21,14 @@ final class ConfigManagerTests: XCTestCase {
       variant: variant
     )
     let dependencyContainer = DependencyContainer()
+
     let network = NetworkMock(factory: dependencyContainer)
     let storage = StorageMock()
-    let configManager = ConfigManager(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: storage,
-      network: network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = dependencyContainer.configManager
+
+    dependencyContainer.network = network
+    dependencyContainer.storage = storage
+
     configManager.confirmAssignment(assignment)
 
     let milliseconds = 200
@@ -46,16 +44,13 @@ final class ConfigManagerTests: XCTestCase {
 
   func test_loadAssignments_noConfig() async {
     let dependencyContainer = DependencyContainer()
+
     let network = NetworkMock(factory: dependencyContainer)
     let storage = StorageMock()
-    let configManager = ConfigManager(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: storage,
-      network: network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = dependencyContainer.configManager
+
+    dependencyContainer.network = network
+    dependencyContainer.storage = storage
 
     let expectation = expectation(description: "No assignments")
     expectation.isInverted = true
@@ -72,16 +67,14 @@ final class ConfigManagerTests: XCTestCase {
 
   func test_loadAssignments_noTriggers() async {
     let dependencyContainer = DependencyContainer()
+
     let network = NetworkMock(factory: dependencyContainer)
     let storage = StorageMock()
-    let configManager = ConfigManager(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: storage,
-      network: network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = dependencyContainer.configManager
+
+    dependencyContainer.network = network
+    dependencyContainer.storage = storage
+
     configManager.configState.send(.retrieved(.stub()
       .setting(\.triggers, to: [])))
 
@@ -93,16 +86,13 @@ final class ConfigManagerTests: XCTestCase {
 
   func test_loadAssignments_saveAssignmentsFromServer() async {
     let dependencyContainer = DependencyContainer()
+
     let network = NetworkMock(factory: dependencyContainer)
     let storage = StorageMock()
-    let configManager = ConfigManager(
-      options: nil,
-      storeKitManager: dependencyContainer.storeKitManager,
-      storage: storage,
-      network: network,
-      paywallManager: dependencyContainer.paywallManager,
-      factory: dependencyContainer
-    )
+    let configManager = dependencyContainer.configManager
+
+    dependencyContainer.network = network
+    dependencyContainer.storage = storage
 
     let variantId = "variantId"
     let experimentId = "experimentId"

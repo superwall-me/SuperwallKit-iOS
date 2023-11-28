@@ -10,9 +10,17 @@ import Combine
 
 /// Actor responsible for handling all paywall requests.
 actor PaywallRequestManager {
-  unowned let storeKitManager: StoreKitManager
-  unowned let network: Network
-  unowned let factory: Factory
+  let factory: DependencyContainer
+
+  var storeKitManager: StoreKitManager {
+    return factory.storeKitManager
+  }
+  var receiptManager: ReceiptManager {
+    return factory.receiptManager
+  }
+  var network: Network {
+    return factory.network
+  }
 
   private var activeTasks: [String: Task<Paywall, Error>] = [:]
   private var paywallsByHash: [String: Paywall] = [:]
@@ -20,13 +28,7 @@ actor PaywallRequestManager {
     & TriggerSessionManagerFactory
     & ConfigManagerFactory
 
-  init(
-    storeKitManager: StoreKitManager,
-    network: Network,
-    factory: Factory
-  ) {
-    self.storeKitManager = storeKitManager
-    self.network = network
+  init(factory: DependencyContainer) {
     self.factory = factory
   }
 
