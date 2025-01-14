@@ -24,7 +24,7 @@ extension Array where Element == Capability {
       } catch {
         Logger.debug(
           logLevel: .debug,
-          scope: .events,
+          scope: .placements,
           message: "Could not encode capability \(capability.name)"
         )
       }

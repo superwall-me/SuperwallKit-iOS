@@ -15,17 +15,17 @@ struct PaywallEventReceiverCapability: Capability {
   let name = "paywall_event_receiver"
 
   let eventNames = [
-    SuperwallEventObjc.restoreStart.description,
-    SuperwallEventObjc.restoreComplete.description,
-    SuperwallEventObjc.restoreFail.description,
-    SuperwallEventObjc.transactionRestore.description,
-    SuperwallEventObjc.transactionStart.description,
-    SuperwallEventObjc.transactionComplete.description,
-    SuperwallEventObjc.transactionFail.description,
-    SuperwallEventObjc.transactionAbandon.description,
-    SuperwallEventObjc.transactionTimeout.description,
-    SuperwallEventObjc.paywallOpen.description,
-    SuperwallEventObjc.paywallClose.description
+    SuperwallPlacementObjc.restoreStart.description,
+    SuperwallPlacementObjc.restoreComplete.description,
+    SuperwallPlacementObjc.restoreFail.description,
+    SuperwallPlacementObjc.transactionRestore.description,
+    SuperwallPlacementObjc.transactionStart.description,
+    SuperwallPlacementObjc.transactionComplete.description,
+    SuperwallPlacementObjc.transactionFail.description,
+    SuperwallPlacementObjc.transactionAbandon.description,
+    SuperwallPlacementObjc.transactionTimeout.description,
+    SuperwallPlacementObjc.paywallOpen.description,
+    SuperwallPlacementObjc.paywallClose.description
   ]
 }
 

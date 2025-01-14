@@ -1,12 +1,13 @@
 //
 //  TriggerLogicTests.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 09/03/2022.
 //
 // swiftlint:disable all
 
 import XCTest
+
 @testable import SuperwallKit
 
 @available(iOS 14, *)
@@ -19,21 +20,20 @@ class AssignmentLogicTests: XCTestCase {
       .setting(\.type, to: .holdout)
       .setting(\.id, to: variantId)
     let rawExperiment = RawExperiment.stub()
-      .setting(\.variants, to: [variantOption]
-    )
+      .setting(
+        \.variants, to: [variantOption]
+      )
     let triggerRule = TriggerRule(
       experiment: rawExperiment,
       expression: nil,
-      expressionJs: nil,
-      expressionCel: nil,
       computedPropertyRequests: [],
       preload: .init(behavior: .always)
     )
     let trigger = Trigger(
-      eventName: eventName,
-      rules: [triggerRule]
+      placementName: eventName,
+      audiences: [triggerRule]
     )
-    let eventData = EventData(
+    let eventData = PlacementData(
       name: eventName,
       parameters: [:],
       createdAt: Date()
@@ -41,21 +41,20 @@ class AssignmentLogicTests: XCTestCase {
     let triggers = [eventName: trigger]
 
     let dependencyContainer = DependencyContainer()
-    let variant = variantOption.toVariant()
+    let variant = variantOption.toExperimentVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
     let storage = StorageMock()
 
     // MARK: When
-    let assignmentLogic = RuleLogic(
+    let assignmentLogic = AudienceLogic(
       configManager: dependencyContainer.configManager,
       storage: storage,
-      factory: dependencyContainer,
-      celEvaluator: dependencyContainer.celEvaluator
+      factory: dependencyContainer
     )
-    let outcome = await assignmentLogic.evaluateRules(
-      forEvent: eventData,
+    let outcome = await assignmentLogic.evaluateAudienceFilters(
+      forPlacement: eventData,
       triggers: triggers
     )
 
@@ -85,21 +84,20 @@ class AssignmentLogicTests: XCTestCase {
       .setting(\.paywallId, to: paywallId)
       .setting(\.id, to: variantId)
     let rawExperiment = RawExperiment.stub()
-      .setting(\.variants, to: [variantOption]
-    )
+      .setting(
+        \.variants, to: [variantOption]
+      )
     let triggerRule = TriggerRule(
       experiment: rawExperiment,
       expression: nil,
-      expressionJs: nil,
-      expressionCel: nil,
       computedPropertyRequests: [],
       preload: .init(behavior: .always)
     )
     let trigger = Trigger(
-      eventName: eventName,
-      rules: [triggerRule]
+      placementName: eventName,
+      audiences: [triggerRule]
     )
-    let eventData = EventData(
+    let eventData = PlacementData(
       name: eventName,
       parameters: [:],
       createdAt: Date()
@@ -107,21 +105,20 @@ class AssignmentLogicTests: XCTestCase {
     let triggers = [eventName: trigger]
 
     let dependencyContainer = DependencyContainer()
-    let variant = variantOption.toVariant()
+    let variant = variantOption.toExperimentVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
     let storage = StorageMock()
-    let assignmentLogic = RuleLogic(
+    let assignmentLogic = AudienceLogic(
       configManager: dependencyContainer.configManager,
       storage: storage,
-      factory: dependencyContainer,
-      celEvaluator: dependencyContainer.celEvaluator
+      factory: dependencyContainer
     )
 
     // MARK: When
-    let outcome = await assignmentLogic.evaluateRules(
-      forEvent: eventData,
+    let outcome = await assignmentLogic.evaluateAudienceFilters(
+      forPlacement: eventData,
       triggers: triggers
     )
 
@@ -152,21 +149,20 @@ class AssignmentLogicTests: XCTestCase {
       .setting(\.paywallId, to: paywallId)
       .setting(\.id, to: variantId)
     let rawExperiment = RawExperiment.stub()
-      .setting(\.variants, to: [variantOption]
-    )
+      .setting(
+        \.variants, to: [variantOption]
+      )
     let triggerRule = TriggerRule(
       experiment: rawExperiment,
       expression: nil,
-      expressionJs: nil,
-      expressionCel: nil,
       computedPropertyRequests: [],
       preload: .init(behavior: .always)
     )
     let trigger = Trigger(
-      eventName: eventName,
-      rules: [triggerRule]
+      placementName: eventName,
+      audiences: [triggerRule]
     )
-    let eventData = EventData(
+    let eventData = PlacementData(
       name: eventName,
       parameters: [:],
       createdAt: Date()
@@ -174,18 +170,17 @@ class AssignmentLogicTests: XCTestCase {
     let triggers = [eventName: trigger]
 
     let dependencyContainer = DependencyContainer()
-    let variant = variantOption.toVariant()
+    let variant = variantOption.toExperimentVariant()
     let storage = StorageMock(confirmedAssignments: [rawExperiment.id: variant])
-    let assignmentLogic = RuleLogic(
+    let assignmentLogic = AudienceLogic(
       configManager: dependencyContainer.configManager,
       storage: storage,
-      factory: dependencyContainer,
-      celEvaluator: dependencyContainer.celEvaluator
+      factory: dependencyContainer
     )
 
     // MARK: When
-    let outcome = await assignmentLogic.evaluateRules(
-      forEvent: eventData,
+    let outcome = await assignmentLogic.evaluateAudienceFilters(
+      forPlacement: eventData,
       triggers: triggers
     )
 
@@ -202,7 +197,9 @@ class AssignmentLogicTests: XCTestCase {
     XCTAssertNil(confirmableAssignments)
   }
 
-  func testGetOutcome_presentIdentifier_confirmedAssignmentsAndUnconfirmedAssignmentsRaceCondition() async throws {
+  func testGetOutcome_presentIdentifier_confirmedAssignmentsAndUnconfirmedAssignmentsRaceCondition()
+    async throws
+  {
     // MARK: Given
     let eventName = "opened_application"
     let variantId = "7"
@@ -212,21 +209,20 @@ class AssignmentLogicTests: XCTestCase {
       .setting(\.paywallId, to: paywallId)
       .setting(\.id, to: variantId)
     let rawExperiment = RawExperiment.stub()
-      .setting(\.variants, to: [variantOption]
-    )
+      .setting(
+        \.variants, to: [variantOption]
+      )
     let triggerRule = TriggerRule(
       experiment: rawExperiment,
       expression: nil,
-      expressionJs: nil,
-      expressionCel: nil,
       computedPropertyRequests: [],
       preload: .init(behavior: .always)
     )
     let trigger = Trigger(
-      eventName: eventName,
-      rules: [triggerRule]
+      placementName: eventName,
+      audiences: [triggerRule]
     )
-    let eventData = EventData(
+    let eventData = PlacementData(
       name: eventName,
       parameters: [:],
       createdAt: Date()
@@ -234,24 +230,24 @@ class AssignmentLogicTests: XCTestCase {
     let triggers = [eventName: trigger]
 
     let dependencyContainer = DependencyContainer()
-    let variant = variantOption.toVariant()
-    let variant2 = variantOption
+    let variant = variantOption.toExperimentVariant()
+    let variant2 =
+      variantOption
       .setting(\.paywallId, to: "123")
-      .toVariant()
+      .toExperimentVariant()
     let storage = StorageMock(confirmedAssignments: [rawExperiment.id: variant])
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant2
     ]
-    let assignmentLogic = RuleLogic(
+    let assignmentLogic = AudienceLogic(
       configManager: dependencyContainer.configManager,
       storage: storage,
-      factory: dependencyContainer,
-      celEvaluator: dependencyContainer.celEvaluator
+      factory: dependencyContainer
     )
 
     // MARK: When
-    let outcome = await assignmentLogic.evaluateRules(
-      forEvent: eventData,
+    let outcome = await assignmentLogic.evaluateAudienceFilters(
+      forPlacement: eventData,
       triggers: triggers
     )
 
@@ -278,21 +274,20 @@ class AssignmentLogicTests: XCTestCase {
       .setting(\.paywallId, to: paywallId)
       .setting(\.id, to: variantId)
     let rawExperiment = RawExperiment.stub()
-      .setting(\.variants, to: [variantOption]
-    )
+      .setting(
+        \.variants, to: [variantOption]
+      )
     let triggerRule = TriggerRule(
       experiment: rawExperiment,
       expression: "params.a == \"c\"",
-      expressionJs: nil,
-      expressionCel: nil,
       computedPropertyRequests: [],
       preload: .init(behavior: .always)
     )
     let trigger = Trigger(
-      eventName: eventName,
-      rules: [triggerRule]
+      placementName: eventName,
+      audiences: [triggerRule]
     )
-    let eventData = EventData(
+    let eventData = PlacementData(
       name: eventName,
       parameters: [:],
       createdAt: Date()
@@ -301,26 +296,25 @@ class AssignmentLogicTests: XCTestCase {
 
     let dependencyContainer = DependencyContainer()
     let storage = StorageMock()
-    let variant = variantOption.toVariant()
+    let variant = variantOption.toExperimentVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
-    let assignmentLogic = RuleLogic(
+    let assignmentLogic = AudienceLogic(
       configManager: dependencyContainer.configManager,
       storage: storage,
-      factory: dependencyContainer,
-      celEvaluator: dependencyContainer.celEvaluator
+      factory: dependencyContainer
     )
 
     // MARK: When
-    let outcome = await assignmentLogic.evaluateRules(
-      forEvent: eventData,
+    let outcome = await assignmentLogic.evaluateAudienceFilters(
+      forPlacement: eventData,
       triggers: triggers
     )
 
     // MARK: Then
-    guard case .noRuleMatch = outcome.triggerResult else {
-      return XCTFail("Incorrect outcome. Expected noRuleMatch")
+    guard case .noAudienceMatch = outcome.triggerResult else {
+      return XCTFail("Incorrect outcome. Expected noAudienceMatch")
     }
     let confirmableAssignments = outcome.confirmableAssignment
     XCTAssertNil(confirmableAssignments)
@@ -336,21 +330,20 @@ class AssignmentLogicTests: XCTestCase {
       .setting(\.paywallId, to: paywallId)
       .setting(\.id, to: variantId)
     let rawExperiment = RawExperiment.stub()
-      .setting(\.variants, to: [variantOption]
-    )
+      .setting(
+        \.variants, to: [variantOption]
+      )
     let triggerRule = TriggerRule(
       experiment: rawExperiment,
       expression: "params.a == \"c\"",
-      expressionJs: nil,
-      expressionCel: nil,
       computedPropertyRequests: [],
       preload: .init(behavior: .always)
     )
     let trigger = Trigger(
-      eventName: eventName,
-      rules: [triggerRule]
+      placementName: eventName,
+      audiences: [triggerRule]
     )
-    let eventData = EventData(
+    let eventData = PlacementData(
       name: "other event",
       parameters: [:],
       createdAt: Date()
@@ -359,25 +352,24 @@ class AssignmentLogicTests: XCTestCase {
 
     let dependencyContainer = DependencyContainer()
     let storage = StorageMock()
-    let variant = variantOption.toVariant()
+    let variant = variantOption.toExperimentVariant()
     dependencyContainer.configManager.unconfirmedAssignments = [
       rawExperiment.id: variant
     ]
-    let assignmentLogic = RuleLogic(
+    let assignmentLogic = AudienceLogic(
       configManager: dependencyContainer.configManager,
       storage: storage,
-      factory: dependencyContainer,
-      celEvaluator: dependencyContainer.celEvaluator
+      factory: dependencyContainer
     )
 
     // MARK: When
-    let outcome = await assignmentLogic.evaluateRules(
-      forEvent: eventData,
+    let outcome = await assignmentLogic.evaluateAudienceFilters(
+      forPlacement: eventData,
       triggers: triggers
     )
 
     // MARK: Then
-    guard case .eventNotFound = outcome.triggerResult else {
+    guard case .placementNotFound = outcome.triggerResult else {
       return XCTFail("Incorrect outcome. Expected unknown event")
     }
 

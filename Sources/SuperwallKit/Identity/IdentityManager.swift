@@ -227,8 +227,8 @@ class IdentityManager {
       self._appUserId = userId
 
       Task {
-        let trackableEvent = InternalSuperwallEvent.IdentityAlias()
-        await Superwall.shared.track(trackableEvent)
+        let identityAlias = InternalSuperwallPlacement.IdentityAlias()
+        await Superwall.shared.track(identityAlias)
       }
 
       // Regenerate seed based on userId.
@@ -368,11 +368,11 @@ extension IdentityManager {
 
     if shouldTrackMerge {
       Task {
-        let trackableEvent = InternalSuperwallEvent.Attributes(
+        let attributes = InternalSuperwallPlacement.Attributes(
           appInstalledAtString: deviceHelper.appInstalledAtString,
           audienceFilterParams: mergedAttributes
         )
-        await Superwall.shared.track(trackableEvent)
+        await Superwall.shared.track(attributes)
       }
     }
 

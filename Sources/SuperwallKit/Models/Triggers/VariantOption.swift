@@ -48,7 +48,7 @@ struct VariantOption: Codable, Hashable {
     self.paywallId = paywallId
   }
 
-  func toVariant() -> Experiment.Variant {
+  func toExperimentVariant() -> Experiment.Variant {
     return Experiment.Variant(
       id: id,
       type: type,

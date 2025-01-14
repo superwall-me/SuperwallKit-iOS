@@ -108,11 +108,11 @@ final class SWWebViewLoadingHandler {
       return
     }
 
-    let trackedEvent = InternalSuperwallEvent.PaywallWebviewLoad(
+    let webviewLoad = InternalSuperwallPlacement.PaywallWebviewLoad(
       state: .fail(error, urls),
       paywallInfo: paywallInfo
     )
-    await Superwall.shared.track(trackedEvent)
+    await Superwall.shared.track(webviewLoad)
   }
 
   private func trackWebViewLoadFallback(
@@ -122,10 +122,10 @@ final class SWWebViewLoadingHandler {
       return
     }
 
-    let trackedEvent = InternalSuperwallEvent.PaywallWebviewLoad(
+    let webviewLoad = InternalSuperwallPlacement.PaywallWebviewLoad(
       state: .fallback,
       paywallInfo: paywallInfo
     )
-    await Superwall.shared.track(trackedEvent)
+    await Superwall.shared.track(webviewLoad)
   }
 }

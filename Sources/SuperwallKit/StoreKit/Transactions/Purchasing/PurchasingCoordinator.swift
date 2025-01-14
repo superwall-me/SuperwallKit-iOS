@@ -23,6 +23,10 @@ actor PurchasingCoordinator {
     self.factory = factory
   }
 
+  func setIsFreeTrialAvailable(to newValue: Bool) {
+    isFreeTrialAvailable = newValue
+  }
+
   /// A boolean indicating whether the given `date` is within an hour of the `purchaseDate`.
   func dateIsWithinLastHour(_ transactionDate: Date?) -> Bool {
     guard

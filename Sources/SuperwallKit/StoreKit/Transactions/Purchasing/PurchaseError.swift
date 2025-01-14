@@ -9,6 +9,7 @@ import Foundation
 
 enum PurchaseError: LocalizedError {
   case productUnavailable
+  case noSk1Product
   case unknown
   case noTransactionDetected
   case unverifiedTransaction
@@ -17,6 +18,8 @@ enum PurchaseError: LocalizedError {
     switch self {
     case .productUnavailable:
       return "There was an error retrieving the product to purchase."
+    case .noSk1Product:
+      return "No StoreKit 1 product found."
     case .noTransactionDetected:
       return "No receipt was found on device for the product transaction."
     case .unverifiedTransaction:

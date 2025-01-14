@@ -14,7 +14,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
   var cancellables: [AnyCancellable] = []
 
   func test_handleTriggerResult_paywall() async {
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       triggerResult: .paywall(.init(id: "", groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )
 
@@ -30,7 +30,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
     do {
       _ = try await Superwall.shared.getExperiment(
         request: .stub(),
-        rulesOutcome: input,
+        audienceOutcome: input,
         debugInfo: [:],
         paywallStatePublisher: statePublisher,
         storage: StorageMock()
@@ -45,7 +45,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
   func test_handleTriggerResult_holdout() async {
     //TODO: THis doesn't take into account activateSession
     let experimentId = "abc"
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       triggerResult: .holdout(.init(id: experimentId, groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )
 
@@ -79,7 +79,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
     do {
       _ = try await Superwall.shared.getExperiment(
         request: .stub(),
-        rulesOutcome: input,
+        audienceOutcome: input,
         debugInfo: [:],
         paywallStatePublisher: statePublisher,
         storage: StorageMock()
@@ -98,8 +98,8 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
   }
 
   func test_handleTriggerResult_noRuleMatch() async {
-    let input = RuleEvaluationOutcome(
-      triggerResult: .noRuleMatch([])
+    let input = AudienceFilterEvaluationOutcome(
+      triggerResult: .noAudienceMatch([])
     )
 
     let statePublisher = PassthroughSubject<PaywallState, Never>()
@@ -117,7 +117,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
       switch state {
       case .skipped(let reason):
         switch reason {
-        case .noRuleMatch:
+        case .noAudienceMatch:
           stateExpectation.fulfill()
         default:
           break
@@ -131,7 +131,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
     do {
       _ = try await Superwall.shared.getExperiment(
         request: .stub(),
-        rulesOutcome: input,
+        audienceOutcome: input,
         debugInfo: [:],
         paywallStatePublisher: statePublisher,
         storage: StorageMock()
@@ -139,7 +139,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
       XCTFail("Should fail")
     } catch {
       if let error = error as? PresentationPipelineError,
-        case .noRuleMatch = error {
+        case .noAudienceMatch = error {
 
       } else {
         XCTFail("Wrong error type")
@@ -150,8 +150,8 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
   }
 
   func test_handleTriggerResult_eventNotFound() async {
-    let input = RuleEvaluationOutcome(
-      triggerResult: .eventNotFound
+    let input = AudienceFilterEvaluationOutcome(
+      triggerResult: .placementNotFound
     )
 
     let statePublisher = PassthroughSubject<PaywallState, Never>()
@@ -169,7 +169,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
       switch state {
       case .skipped(let reason):
         switch reason {
-        case .eventNotFound:
+        case .placementNotFound:
           stateExpectation.fulfill()
         default:
           break
@@ -183,7 +183,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
     do {
       _ = try await Superwall.shared.getExperiment(
         request: .stub(),
-        rulesOutcome: input,
+        audienceOutcome: input,
         debugInfo: [:],
         paywallStatePublisher: statePublisher,
         storage: StorageMock()
@@ -191,7 +191,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
       XCTFail("Should fail")
     } catch {
       if let error = error as? PresentationPipelineError,
-        case .eventNotFound = error {
+        case .placementNotFound = error {
 
       } else {
         XCTFail("Wrong error type")
@@ -206,7 +206,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
       domain: "Test",
       code: 1
     )
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       triggerResult: .error(outputError)
     )
 
@@ -235,7 +235,7 @@ final class HandleTriggerResultOperatorTests: XCTestCase {
     do {
       _ = try await Superwall.shared.getExperiment(
         request: .stub(),
-        rulesOutcome: input,
+        audienceOutcome: input,
         debugInfo: [:],
         paywallStatePublisher: statePublisher,
         storage: StorageMock()

@@ -13,7 +13,7 @@ extension Superwall {
   struct PaywallComponents {
     let viewController: PaywallViewController
     let presenter: UIViewController?
-    let rulesOutcome: RuleEvaluationOutcome
+    let audienceOutcome: AudienceFilterEvaluationOutcome
     let debugInfo: [String: Any]
   }
 
@@ -34,7 +34,7 @@ extension Superwall {
       await paywallComponents.viewController.set(
         request: request,
         paywallStatePublisher: publisher,
-        unsavedOccurrence: paywallComponents.rulesOutcome.unsavedOccurrence
+        unsavedOccurrence: paywallComponents.audienceOutcome.unsavedOccurrence
       )
       return paywallComponents.viewController
     } catch {

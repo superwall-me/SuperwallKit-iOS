@@ -13,7 +13,7 @@ extension Superwall {
   ///
   /// - Parameters:
   ///   - request: The presentation request.
-  ///   - rulesOutcome: The outcome from evaluating rules.
+  ///   - audienceOutcome: The outcome from evaluating audience filters.
   ///   - debugInfo: Information to help with debugging.
   ///   - paywallStatePublisher: A `PassthroughSubject` that gets sent ``PaywallState`` objects.
   ///   - dependencyContainer: Used with testing only.
@@ -23,14 +23,14 @@ extension Superwall {
   /// already presented.
   func getPaywallViewController(
     request: PresentationRequest,
-    rulesOutcome: RuleEvaluationOutcome,
+    audienceOutcome: AudienceFilterEvaluationOutcome,
     debugInfo: [String: Any],
     paywallStatePublisher: PassthroughSubject<PaywallState, Never>? = nil,
     dependencyContainer: DependencyContainer
   ) async throws -> PaywallViewController {
     let experiment = try await getExperiment(
       request: request,
-      rulesOutcome: rulesOutcome,
+      audienceOutcome: audienceOutcome,
       debugInfo: debugInfo,
       paywallStatePublisher: paywallStatePublisher,
       storage: dependencyContainer.storage
@@ -41,15 +41,8 @@ extension Superwall {
       experiment: experiment
     )
 
-    var requestRetryCount = 6
-
-    let subscriptionStatus = try await request.flags.subscriptionStatus.throwableAsync()
-    if subscriptionStatus == .active {
-      requestRetryCount = 0
-    }
-
     let paywallRequest = dependencyContainer.makePaywallRequest(
-      eventData: request.presentationInfo.eventData,
+      placementData: request.presentationInfo.placementData,
       responseIdentifiers: responseIdentifiers,
       overrides: .init(
         products: request.paywallOverrides?.productsByName,
@@ -57,8 +50,7 @@ extension Superwall {
         featureGatingBehavior: request.paywallOverrides?.featureGatingBehavior
       ),
       isDebuggerLaunched: request.flags.isDebuggerLaunched,
-      presentationSourceType: request.presentationSourceType,
-      retryCount: requestRetryCount
+      presentationSourceType: request.presentationSourceType
     )
     do {
       let isForPresentation = !request.flags.type.isGettingPresentationResult
@@ -76,11 +68,7 @@ extension Superwall {
 
       return paywallViewController
     } catch {
-      if subscriptionStatus == .active {
-        throw userIsSubscribed(paywallStatePublisher: paywallStatePublisher)
-      } else {
-        throw await presentationFailure(error, request, debugInfo, paywallStatePublisher)
-      }
+      throw await presentationFailure(error, request, debugInfo, paywallStatePublisher)
     }
   }
 
@@ -90,25 +78,6 @@ extension Superwall {
     _ debugInfo: [String: Any],
     _ paywallStatePublisher: PassthroughSubject<PaywallState, Never>?
   ) async -> Error {
-    let subscriptionStatus: SubscriptionStatus
-    do {
-      subscriptionStatus = try await request.flags.subscriptionStatus.throwableAsync()
-    } catch {
-      return error
-    }
-    if InternalPresentationLogic.userSubscribedAndNotOverridden(
-      isUserSubscribed: subscriptionStatus == .active,
-      overrides: .init(
-        isDebuggerLaunched: request.flags.isDebuggerLaunched,
-        shouldIgnoreSubscriptionStatus: request.paywallOverrides?.ignoreSubscriptionStatus
-      )
-    ) {
-      let state: PaywallState = .skipped(.userIsSubscribed)
-      paywallStatePublisher?.send(state)
-      paywallStatePublisher?.send(completion: .finished)
-      return PresentationPipelineError.userIsSubscribed
-    }
-
     if !request.flags.type.isGettingPresentationResult {
       Logger.debug(
         logLevel: .error,

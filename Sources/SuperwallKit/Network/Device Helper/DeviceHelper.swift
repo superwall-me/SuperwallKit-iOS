@@ -3,7 +3,7 @@
 //
 //  Created by Jake Mor on 8/10/21.
 //
-// swiftlint:disable type_body_length file_length
+// swiftlint:disable type_body_length file_length function_body_length
 
 import UIKit
 import Foundation
@@ -364,13 +364,13 @@ class DeviceHelper {
   }
 
   func getDeviceAttributes(
-    since event: EventData?,
+    since placement: PlacementData?,
     computedPropertyRequests: [ComputedPropertyRequest]
   ) async -> [String: Any] {
     var dictionary = await getTemplateDevice()
 
-    let computedProperties = await getComputedDevicePropertiesSinceEvent(
-      event,
+    let computedProperties = await getComputedDevicePropertiesSincePlacement(
+      placement,
       requests: computedPropertyRequests
     )
     dictionary += computedProperties
@@ -378,18 +378,18 @@ class DeviceHelper {
     return dictionary
   }
 
-  private func getComputedDevicePropertiesSinceEvent(
-    _ event: EventData?,
+  private func getComputedDevicePropertiesSincePlacement(
+    _ placement: PlacementData?,
     requests computedPropertyRequests: [ComputedPropertyRequest]
   ) async -> [String: Any] {
     var output: [String: Any] = [:]
 
     for computedPropertyRequest in computedPropertyRequests {
-      if let value = await storage.coreDataManager.getComputedPropertySinceEvent(
-        event,
+      if let value = await storage.coreDataManager.getComputedPropertySincePlacement(
+        placement,
         request: computedPropertyRequest
       ) {
-        output[computedPropertyRequest.type.prefix + computedPropertyRequest.eventName] = value
+        output[computedPropertyRequest.type.prefix + computedPropertyRequest.placementName] = value
       }
     }
 
@@ -492,7 +492,10 @@ class DeviceHelper {
       utcDateTime: utcDateTimeString,
       localDateTime: localDateTimeString,
       isSandbox: isSandbox,
-      subscriptionStatus: Superwall.shared.subscriptionStatus.description,
+      activeEntitlements: Set(entitlementsInfo.active.map { $0.id }),
+      activeEntitlementObjects: entitlementsInfo.active,
+      activeProducts: await receiptManager.getActiveProductIds(),
+      entitlementStatus: entitlementsInfo.status.description,
       isFirstAppOpen: isFirstAppOpen,
       sdkVersion: sdkVersion,
       sdkVersionPadded: sdkVersionPadded,
@@ -516,17 +519,23 @@ class DeviceHelper {
 
   private unowned let network: Network
   private unowned let storage: Storage
+  private unowned let entitlementsInfo: EntitlementsInfo
+  private unowned let receiptManager: ReceiptManager
   private unowned let factory: IdentityInfoFactory & LocaleIdentifierFactory
 
   init(
     api: Api,
     storage: Storage,
     network: Network,
+    entitlementsInfo: EntitlementsInfo,
+    receiptManager: ReceiptManager,
     factory: IdentityInfoFactory & LocaleIdentifierFactory
   ) {
     self.storage = storage
     self.network = network
+    self.entitlementsInfo = entitlementsInfo
     self.appInstalledAtString = appInstallDate?.isoString ?? ""
+    self.receiptManager = receiptManager
     self.factory = factory
       reachability = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, api.base.host)
     self.sdkVersionPadded = Self.makePaddedVersion(using: sdkVersion)

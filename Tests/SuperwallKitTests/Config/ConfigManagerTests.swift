@@ -28,6 +28,7 @@ final class ConfigManagerTests: XCTestCase {
       network: network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
 
@@ -44,13 +45,13 @@ final class ConfigManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let paywall = Paywall.stub()
-      .setting(\.productItems, to: [.init(name: "abc", type: .appStore(.init(store: .appStore, id: "abc")))])
+      .setting(\.products, to: [.init(name: "abc", type: .appStore(.init(store: .appStore, id: "abc")), entitlements: [.stub()])])
     let config: Config = Config(
       buildId: "buildId",
       triggers: [
         .init(
-          eventName: "event",
-          rules: [.stub()]
+          placementName: "event",
+          audiences: [.stub()]
         )
       ],
       paywalls: [paywall],
@@ -59,7 +60,8 @@ final class ConfigManagerTests: XCTestCase {
       appSessionTimeout: 2202,
       featureFlags: .stub(),
       preloadingDisabled: .stub(),
-      attribution: .init(appleSearchAds: .init(enabled: true))
+      attribution: .init(appleSearchAds: .init(enabled: true)),
+      products: paywall.products
     )
     dependencyContainer.storage.save(config, forType: LatestConfig.self)
     let newConfig = dependencyContainer.storage.get(LatestConfig.self)
@@ -87,7 +89,8 @@ final class ConfigManagerTests: XCTestCase {
       storage: storage,
       network: network,
       paywallManager: dependencyContainer.paywallManager,
-      deviceHelper: dependencyContainer.deviceHelper,
+      deviceHelper: dependencyContainer.deviceHelper, 
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     configManager.confirmAssignment(assignment)
@@ -117,6 +120,7 @@ final class ConfigManagerTests: XCTestCase {
       network: network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
 
@@ -146,7 +150,8 @@ final class ConfigManagerTests: XCTestCase {
       storage: storage,
       network: network,
       paywallManager: dependencyContainer.paywallManager,
-      deviceHelper: dependencyContainer.deviceHelper,
+      deviceHelper: dependencyContainer.deviceHelper, 
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     configManager.configState.send(.retrieved(.stub()
@@ -172,6 +177,7 @@ final class ConfigManagerTests: XCTestCase {
       network: network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
 
@@ -188,7 +194,7 @@ final class ConfigManagerTests: XCTestCase {
     configManager.configState.send(.retrieved(.stub()
       .setting(\.triggers, to: [
         .stub()
-        .setting(\.rules, to: [
+        .setting(\.audiences, to: [
           .stub()
           .setting(\.experiment.id, to: experimentId)
           .setting(\.experiment.variants, to: [
@@ -202,7 +208,7 @@ final class ConfigManagerTests: XCTestCase {
 
     try? await Task.sleep(nanoseconds: 1_000_000)
 
-    XCTAssertEqual(storage.getConfirmedAssignments()[experimentId], variantOption.toVariant())
+    XCTAssertEqual(storage.getConfirmedAssignments()[experimentId], variantOption.toExperimentVariant())
     XCTAssertTrue(configManager.unconfirmedAssignments.isEmpty)
   }
 }

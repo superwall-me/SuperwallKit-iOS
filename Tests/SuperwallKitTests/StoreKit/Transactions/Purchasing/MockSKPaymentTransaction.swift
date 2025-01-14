@@ -9,7 +9,7 @@
 import Foundation
 import StoreKit
 
-final class MockSKPaymentTransaction: SKPaymentTransaction {
+final class MockSKPaymentTransaction: SKPaymentTransaction, @unchecked Sendable {
   private var internalState: SKPaymentTransactionState
 
   override var transactionState: SKPaymentTransactionState {

@@ -233,12 +233,11 @@ final class DebugViewController: UIViewController {
 
     do {
       let request = factory.makePaywallRequest(
-        eventData: nil,
+        placementData: nil,
         responseIdentifiers: .init(paywallId: paywallId),
         overrides: nil,
         isDebuggerLaunched: true,
-        presentationSourceType: nil,
-        retryCount: 6
+        presentationSourceType: nil
       )
       var paywall = try await paywallRequestManager.getPaywall(from: request)
 
@@ -379,7 +378,7 @@ final class DebugViewController: UIViewController {
     }
     guard let (productsById, _) = try? await storeKitManager.getProducts(
       forPaywall: paywall,
-      event: nil
+      placement: nil
     ) else {
       return
     }
@@ -429,8 +428,6 @@ final class DebugViewController: UIViewController {
     bottomButton.setImage(nil, for: .normal)
     bottomButton.showLoading = true
 
-    let inactiveSubscriptionPublisher = CurrentValueSubject<SubscriptionStatus, Never>(SubscriptionStatus.inactive)
-      .eraseToAnyPublisher()
     let presentationRequest = factory.makePresentationRequest(
       .fromIdentifier(
         paywallIdentifier,
@@ -439,11 +436,9 @@ final class DebugViewController: UIViewController {
       paywallOverrides: nil,
       presenter: self,
       isDebuggerLaunched: true,
-      subscriptionStatus: inactiveSubscriptionPublisher,
       isPaywallPresented: Superwall.shared.isPaywallPresented,
       type: .presentation
     )
-
 
     let publisher = PassthroughSubject<PaywallState, Never>()
     cancellable = publisher
@@ -464,12 +459,10 @@ final class DebugViewController: UIViewController {
           switch reason {
           case .holdout:
             errorMessage = "The user was assigned to a holdout."
-          case .noRuleMatch:
-            errorMessage = "The user didn't match a rule."
-          case .eventNotFound:
-            errorMessage = "Couldn't find event."
-          case .userIsSubscribed:
-            errorMessage = "The user is subscribed."
+          case .noAudienceMatch:
+            errorMessage = "The user didn't match an audience."
+          case .placementNotFound:
+            errorMessage = "Couldn't find placement."
           }
           self.presentAlert(
             title: "Paywall Skipped",

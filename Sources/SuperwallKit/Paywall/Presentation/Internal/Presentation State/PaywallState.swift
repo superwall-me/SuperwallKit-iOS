@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 07/09/2022.
 //
@@ -10,16 +10,21 @@ import Foundation
 /// Contains the possible reasons for the dismissal of a paywall.
 public enum PaywallResult: Equatable, Sendable {
   /// The paywall was dismissed because the user purchased a product
-  ///
-  /// - Parameters:
-  ///   - productId: The identifier of the product.
-  case purchased(productId: String)
+  case purchased(StoreProduct)
 
   /// The paywall was declined by the user pressing the close button.
   case declined
 
   /// The paywall was dismissed due to the user restoring their purchases.
   case restored
+
+  /// The purchased product, if available.
+  var product: StoreProduct? {
+    if case .purchased(let product) = self {
+      return product
+    }
+    return nil
+  }
 
   func convertForObjc() -> PaywallResultObjc {
     switch self {

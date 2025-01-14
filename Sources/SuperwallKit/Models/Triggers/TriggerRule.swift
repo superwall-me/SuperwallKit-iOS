@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct UnmatchedRule: Equatable {
+struct UnmatchedAudience: Equatable {
   enum Source: String {
     case expression = "EXPRESSION"
     case occurrence = "OCCURRENCE"
@@ -16,9 +16,9 @@ struct UnmatchedRule: Equatable {
   let experimentId: String
 }
 
-extension UnmatchedRule: Stubbable {
-  static func stub() -> UnmatchedRule {
-    return UnmatchedRule(
+extension UnmatchedAudience: Stubbable {
+  static func stub() -> UnmatchedAudience {
+    return UnmatchedAudience(
       source: .expression,
       experimentId: "1"
     )
@@ -26,57 +26,55 @@ extension UnmatchedRule: Stubbable {
 }
 
 struct MatchedItem {
-  let rule: TriggerRule
-  let unsavedOccurrence: TriggerRuleOccurrence?
+  let audience: TriggerRule
+  let unsavedOccurrence: TriggerAudienceOccurrence?
 }
 
 extension MatchedItem: Stubbable {
   static func stub() -> MatchedItem {
     return MatchedItem(
-      rule: .stub(),
+      audience: .stub(),
       unsavedOccurrence: nil
     )
   }
 }
 
-enum TriggerRuleOutcome: Equatable {
-  static func == (lhs: TriggerRuleOutcome, rhs: TriggerRuleOutcome) -> Bool {
+enum TriggerAudienceOutcome: Equatable {
+  static func == (lhs: TriggerAudienceOutcome, rhs: TriggerAudienceOutcome) -> Bool {
     switch (lhs, rhs) {
     case let (.match(item1), .match(item2)):
-      return item1.rule == item2.rule
+      return item1.audience == item2.audience
         && item1.unsavedOccurrence == item2.unsavedOccurrence
-    case let (.noMatch(unmatchedRule1), .noMatch(unmatchedRule2)):
-      return unmatchedRule1.source == unmatchedRule2.source
-        && unmatchedRule1.experimentId == unmatchedRule2.experimentId
+    case let (.noMatch(unmatchedAudience1), .noMatch(unmatchedAudience2)):
+      return unmatchedAudience1.source == unmatchedAudience2.source
+        && unmatchedAudience1.experimentId == unmatchedAudience2.experimentId
     default:
       return false
     }
   }
 
-  case noMatch(UnmatchedRule)
+  case noMatch(UnmatchedAudience)
   case match(MatchedItem)
 
   static func noMatch(
-    source: UnmatchedRule.Source,
+    source: UnmatchedAudience.Source,
     experimentId: String
-  ) -> TriggerRuleOutcome {
+  ) -> TriggerAudienceOutcome {
     return .noMatch(.init(source: source, experimentId: experimentId))
   }
 
   static func match(
-    rule: TriggerRule,
-    unsavedOccurrence: TriggerRuleOccurrence? = nil
-  ) -> TriggerRuleOutcome {
-    return .match(.init(rule: rule, unsavedOccurrence: unsavedOccurrence))
+    audience: TriggerRule,
+    unsavedOccurrence: TriggerAudienceOccurrence? = nil
+  ) -> TriggerAudienceOutcome {
+    return .match(.init(audience: audience, unsavedOccurrence: unsavedOccurrence))
   }
 }
 
 struct TriggerRule: Codable, Hashable, Equatable {
   var experiment: RawExperiment
   var expression: String?
-  var expressionJs: String?
-  var expressionCel: String?
-  var occurrence: TriggerRuleOccurrence?
+  var occurrence: TriggerAudienceOccurrence?
   let computedPropertyRequests: [ComputedPropertyRequest]
   var preload: TriggerPreload
 
@@ -97,7 +95,8 @@ struct TriggerRule: Codable, Hashable, Equatable {
       let values = try decoder.container(keyedBy: CodingKeys.self)
 
       let behavior = try values.decode(TriggerPreloadBehavior.self, forKey: .behavior)
-      let requiresReevaluation = try values.decodeIfPresent(Bool.self, forKey: .requiresReEvaluation) ?? false
+      let requiresReevaluation =
+        try values.decodeIfPresent(Bool.self, forKey: .requiresReEvaluation) ?? false
       if requiresReevaluation {
         self.behavior = .always
       } else {
@@ -120,10 +119,8 @@ struct TriggerRule: Codable, Hashable, Equatable {
   enum CodingKeys: String, CodingKey {
     case experimentGroupId
     case experimentId
-    case expression
-    case variants
-    case expressionJs
     case expressionCel
+    case variants
     case occurrence
     case computedPropertyRequests = "computedProperties"
     case preload
@@ -142,16 +139,15 @@ struct TriggerRule: Codable, Hashable, Equatable {
       variants: variants
     )
 
-    expression = try values.decodeIfPresent(String.self, forKey: .expression)
-    expressionJs = try values.decodeIfPresent(String.self, forKey: .expressionJs)
-    expressionCel = try values.decodeIfPresent(String.self, forKey: .expressionCel)
-    occurrence = try values.decodeIfPresent(TriggerRuleOccurrence.self, forKey: .occurrence)
+    expression = try values.decodeIfPresent(String.self, forKey: .expressionCel)
+    occurrence = try values.decodeIfPresent(TriggerAudienceOccurrence.self, forKey: .occurrence)
     preload = try values.decode(TriggerPreload.self, forKey: .preload)
 
-    let throwableComputedProperties = try values.decodeIfPresent(
-      [Throwable<ComputedPropertyRequest>].self,
-      forKey: .computedPropertyRequests
-    ) ?? []
+    let throwableComputedProperties =
+      try values.decodeIfPresent(
+        [Throwable<ComputedPropertyRequest>].self,
+        forKey: .computedPropertyRequests
+      ) ?? []
     computedPropertyRequests = throwableComputedProperties.compactMap { try? $0.result.get() }
   }
 
@@ -161,9 +157,7 @@ struct TriggerRule: Codable, Hashable, Equatable {
     try container.encode(experiment.id, forKey: .experimentId)
     try container.encode(experiment.groupId, forKey: .experimentGroupId)
     try container.encode(experiment.variants, forKey: .variants)
-    try container.encodeIfPresent(expression, forKey: .expression)
-    try container.encodeIfPresent(expressionJs, forKey: .expressionJs)
-    try container.encodeIfPresent(expressionCel, forKey: .expressionCel)
+    try container.encodeIfPresent(expression, forKey: .expressionCel)
     try container.encodeIfPresent(occurrence, forKey: .occurrence)
     try container.encode(preload, forKey: .preload)
 
@@ -175,16 +169,12 @@ struct TriggerRule: Codable, Hashable, Equatable {
   init(
     experiment: RawExperiment,
     expression: String?,
-    expressionJs: String?,
-    expressionCel: String?,
-    occurrence: TriggerRuleOccurrence? = nil,
+    occurrence: TriggerAudienceOccurrence? = nil,
     computedPropertyRequests: [ComputedPropertyRequest],
     preload: TriggerPreload
   ) {
     self.experiment = experiment
     self.expression = expression
-    self.expressionJs = expressionJs
-    self.expressionCel = expressionCel
     self.occurrence = occurrence
     self.computedPropertyRequests = computedPropertyRequests
     self.preload = preload
@@ -199,16 +189,14 @@ extension TriggerRule: Stubbable {
         groupId: "2",
         variants: [
           .init(
-          type: .holdout,
-          id: "3",
-          percentage: 20,
-          paywallId: nil
+            type: .holdout,
+            id: "3",
+            percentage: 20,
+            paywallId: nil
           )
         ]
       ),
       expression: nil,
-      expressionJs: nil,
-      expressionCel: nil,
       occurrence: nil,
       computedPropertyRequests: [],
       preload: .init(behavior: .always)

@@ -38,7 +38,7 @@ public struct PaywallView<
 
   /// An optional completion block that gets called when the paywall should dismiss. This defaults to `nil` and the SDK
   /// will call `presentationMode.wrappedValue.dismiss()` by default. Otherwise you must perform the dismissal of the paywall.
-  private var onRequestDismiss: ((PaywallInfo) -> Void)?
+  private var onRequestDismiss: ((PaywallInfo, PaywallResult) -> Void)?
 
   /// A completion block that accepts a ``PaywallSkippedReason`` and returns an `View`.
   ///
@@ -87,7 +87,7 @@ public struct PaywallView<
     event: String,
     params: [String: Any]? = nil,
     paywallOverrides: PaywallOverrides? = nil,
-    onRequestDismiss: ((PaywallInfo) -> Void)? = nil,
+    onRequestDismiss: ((PaywallInfo, PaywallResult) -> Void)? = nil,
     onSkippedView: ((PaywallSkippedReason) -> OnSkippedView)? = nil,
     onErrorView: ((Error) -> OnErrorView)? = nil,
     feature: (() -> Void)? = nil
@@ -124,8 +124,8 @@ public struct PaywallView<
     }
     .onChange(of: manager.dismissState) { newValue in
       switch newValue {
-      case .dismiss(let info):
-        onRequestDismiss?(info) ?? presentationMode.wrappedValue.dismiss()
+      case let .dismiss(info, result):
+        onRequestDismiss?(info, result) ?? presentationMode.wrappedValue.dismiss()
       case .none:
         break
       }
@@ -140,7 +140,7 @@ public struct PaywallView<
         hasLoaded = true
         Task {
           await manager.getPaywall(
-            forEvent: event,
+            forPlacement: event,
             params: params,
             paywallOverrides: paywallOverrides
           )
@@ -177,7 +177,7 @@ extension PaywallView where OnSkippedView == Never, OnErrorView == Never {
     event: String,
     params: [String: Any]? = nil,
     paywallOverrides: PaywallOverrides? = nil,
-    onRequestDismiss: ((PaywallInfo) -> Void)? = nil,
+    onRequestDismiss: ((PaywallInfo, PaywallResult) -> Void)? = nil,
     feature: (() -> Void)? = nil
   ) {
     self.event = event
@@ -219,7 +219,7 @@ extension PaywallView where OnSkippedView == Never {
     event: String,
     params: [String: Any]? = nil,
     paywallOverrides: PaywallOverrides? = nil,
-    onRequestDismiss: ((PaywallInfo) -> Void)? = nil,
+    onRequestDismiss: ((PaywallInfo, PaywallResult) -> Void)? = nil,
     onErrorView: @escaping (Error) -> OnErrorView,
     feature: (() -> Void)? = nil
   ) {
@@ -264,7 +264,7 @@ extension PaywallView where OnErrorView == Never {
     event: String,
     params: [String: Any]? = nil,
     paywallOverrides: PaywallOverrides? = nil,
-    onRequestDismiss: ((PaywallInfo) -> Void)? = nil,
+    onRequestDismiss: ((PaywallInfo, PaywallResult) -> Void)? = nil,
     onSkippedView: @escaping (PaywallSkippedReason) -> OnSkippedView,
     feature: (() -> Void)? = nil
   ) {

@@ -22,6 +22,7 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
 
@@ -29,7 +30,7 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
 
     dependencyContainer.configManager = configManager
 
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       triggerResult: .paywall(.init(id: "", groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )
 
@@ -52,6 +53,7 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
 
@@ -59,7 +61,7 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
 
     dependencyContainer.configManager = configManager
 
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       triggerResult: .holdout(.init(id: "", groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )
     let request = PresentationRequest.stub()
@@ -81,13 +83,14 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
 
     dependencyContainer.configManager = configManager
 
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       confirmableAssignment: .init(experimentId: "", variant: .init(id: "", type: .treatment, paywallId: "")),
       triggerResult: .holdout(.init(id: "", groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )
@@ -111,13 +114,14 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
 
     dependencyContainer.configManager = configManager
 
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       confirmableAssignment: .init(experimentId: "", variant: .init(id: "", type: .treatment, paywallId: "")),
       triggerResult: .holdout(.init(id: "", groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )
@@ -141,13 +145,14 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
 
     dependencyContainer.configManager = configManager
 
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       confirmableAssignment: .init(experimentId: "", variant: .init(id: "", type: .treatment, paywallId: "")),
       triggerResult: .holdout(.init(id: "", groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )
@@ -171,13 +176,14 @@ final class ConfirmHoldoutAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
 
     dependencyContainer.configManager = configManager
 
-    let input = RuleEvaluationOutcome(
+    let input = AudienceFilterEvaluationOutcome(
       confirmableAssignment: .init(experimentId: "", variant: .init(id: "", type: .treatment, paywallId: "")),
       triggerResult: .holdout(.init(id: "", groupId: "", variant: .init(id: "", type: .treatment, paywallId: "")))
     )

@@ -8,11 +8,11 @@
 
 import Foundation
 
-protocol TrackableUserInitiatedEvent: Trackable {}
+protocol TrackableUserInitiatedPlacement: Trackable {}
 
-/// These are events that are initiated by the user. Unlike `SuperwallTrackableEvents`, they are not sent back to the delegate.
-enum UserInitiatedEvent {
-  struct Track: TrackableUserInitiatedEvent {
+/// These are placements that are initiated by the user. Unlike `SuperwallTrackablePlacements`, they are not sent back to the delegate.
+enum UserInitiatedPlacement {
+  struct Track: TrackableUserInitiatedPlacement {
     let rawName: String
     let canImplicitlyTriggerPaywall: Bool
     var audienceFilterParams: [String: Any] = [:]
@@ -24,7 +24,7 @@ enum UserInitiatedEvent {
   }
   /*
   // MARK: - To be deprecated/deleted
-  struct PushNotification: TrackableUserInitiatedEvent {
+  struct PushNotification: TrackableUserInitiatedPlacement {
     enum State {
       case receive
       case open

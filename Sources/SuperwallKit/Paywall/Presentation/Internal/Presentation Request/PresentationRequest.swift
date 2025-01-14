@@ -9,20 +9,20 @@ import UIKit
 import Combine
 
 enum PresentationRequestType: Equatable, CustomStringConvertible {
-  /// Presenting via ``Superwall/register(event:params:handler:feature:)``.
+  /// Presenting via ``Superwall/register(placement:params:handler:feature:)``.
   case presentation
 
   /// Get the paywall view controller via
-  /// ``Superwall/getPaywall(forEvent:params:paywallOverrides:delegate:)``.
+  /// ``Superwall/getPaywall(forPlacement:params:paywallOverrides:delegate:)``.
   case getPaywall(PaywallViewControllerDelegateAdapter)
 
-  /// Get the presentation result via ``Superwall/getPresentationResult(forEvent:)``
+  /// Get the presentation result via ``Superwall/getPresentationResult(forPlacement:)``
   case getPresentationResult
 
-  /// Get the presentation result from an event that's used internally.
+  /// Get the presentation result from a placement that's used internally.
   case handleImplicitTrigger
 
-  /// Get the presentation result for a `paywall_decline` event to decide whether to
+  /// Get the presentation result for a `paywall_decline` placement to decide whether to
   /// close the paywall view controller or not.
   case paywallDeclineCheck
 
@@ -138,7 +138,7 @@ struct PresentationRequest {
 
   struct Flags {
     var isDebuggerLaunched: Bool
-    var subscriptionStatus: AnyPublisher<SubscriptionStatus, Never>
+    var entitlementStatus: AnyPublisher<EntitlementStatus, Never>
     var isPaywallPresented: Bool
     var type: PresentationRequestType
   }

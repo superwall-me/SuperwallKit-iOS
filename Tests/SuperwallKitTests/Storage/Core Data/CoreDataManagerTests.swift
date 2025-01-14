@@ -26,21 +26,21 @@ class CoreDataManagerTests: XCTestCase {
     coreDataStack = nil
   }
 
-  func test_saveEventData_withParams() {
+  func test_savePlacementData_withParams() {
     let eventName = "abc"
-    let eventData: EventData = .stub()
+    let eventData: PlacementData = .stub()
       .setting(\.name, to: eventName)
       .setting(\.parameters, to: ["def": "ghi"])
 
     let expectation = expectation(description: "Saved event")
 
-    coreDataManager.saveEventData(eventData) { savedEventData in
-      XCTAssertEqual(savedEventData.name, eventName)
-      XCTAssertEqual(savedEventData.name, eventName)
-      XCTAssertEqual(savedEventData.createdAt, eventData.createdAt)
+    coreDataManager.savePlacementData(eventData) { savedPlacementData in
+      XCTAssertEqual(savedPlacementData.name, eventName)
+      XCTAssertEqual(savedPlacementData.name, eventName)
+      XCTAssertEqual(savedPlacementData.createdAt, eventData.createdAt)
 
       let encodedParams = try? JSONEncoder().encode(eventData.parameters)
-      XCTAssertEqual(savedEventData.parameters, encodedParams)
+      XCTAssertEqual(savedPlacementData.parameters, encodedParams)
       expectation.fulfill()
     }
 
@@ -49,21 +49,21 @@ class CoreDataManagerTests: XCTestCase {
     }
   }
 
-  func test_saveEventData_withoutParams() {
+  func test_savePlacementData_withoutParams() {
     let eventName = "abc"
-    let eventData: EventData = .stub()
+    let eventData: PlacementData = .stub()
       .setting(\.name, to: eventName)
       .setting(\.parameters, to: [:])
 
     let expectation = expectation(description: "Saved event")
 
-    coreDataManager.saveEventData(eventData) { savedEventData in
-      XCTAssertEqual(savedEventData.name, eventName)
-      XCTAssertEqual(savedEventData.name, eventName)
-      XCTAssertEqual(savedEventData.createdAt, eventData.createdAt)
+    coreDataManager.savePlacementData(eventData) { savedPlacementData in
+      XCTAssertEqual(savedPlacementData.name, eventName)
+      XCTAssertEqual(savedPlacementData.name, eventName)
+      XCTAssertEqual(savedPlacementData.createdAt, eventData.createdAt)
 
       let encodedParams = try? JSONEncoder().encode(eventData.parameters)
-      XCTAssertEqual(savedEventData.parameters, encodedParams)
+      XCTAssertEqual(savedPlacementData.parameters, encodedParams)
       expectation.fulfill()
     }
 
@@ -76,20 +76,20 @@ class CoreDataManagerTests: XCTestCase {
   // TODO: Fix this, doesn't work when run together but works when run individually
 //  func test_deleteAllEntities() async {
 //    // Save Event Data with Params
-//    let eventName = "abc"
-//    let eventData: EventData = .stub()
-//      .setting(\.name, to: eventName)
+//    let placementName = "abc"
+//    let placementData: PlacementData = .stub()
+//      .setting(\.name, to: placementName)
 //      .setting(\.parameters, to: ["def": "ghi"])
 //
 //    let expectation1 = expectation(description: "Saved event")
 //
-//    coreDataManager.saveEventData(eventData) { savedEventData in
-//      XCTAssertEqual(savedEventData.name, eventName)
-//      XCTAssertEqual(savedEventData.name, eventName)
-//      XCTAssertEqual(savedEventData.createdAt, eventData.createdAt)
+//    coreDataManager.savePlacementData(eventData) { savedPlacementData in
+//      XCTAssertEqual(savedPlacementData.name, placementName)
+//      XCTAssertEqual(savedPlacementData.name, placementName)
+//      XCTAssertEqual(savedPlacementData.createdAt, eventData.createdAt)
 //
 //      let encodedParams = try? JSONEncoder().encode(eventData.parameters)
-//      XCTAssertEqual(savedEventData.parameters, encodedParams)
+//      XCTAssertEqual(savedPlacementData.parameters, encodedParams)
 //      expectation1.fulfill()
 //    }
 //
@@ -99,8 +99,8 @@ class CoreDataManagerTests: XCTestCase {
 //    // Save Trigger Rule Occurrence
 //    let key = "abc"
 //    let maxCount = 10
-//    let interval: TriggerRuleOccurrence.Interval = .minutes(60)
-//    let occurrence = TriggerRuleOccurrence(
+//    let interval: TriggerAudienceOccurrence.Interval = .minutes(60)
+//    let occurrence = TriggerAudienceOccurrence(
 //      key: key,
 //      maxCount: maxCount,
 //      interval: interval
@@ -108,9 +108,9 @@ class CoreDataManagerTests: XCTestCase {
 //    let expectation2 = expectation(description: "Saved event")
 //    let date = Date().advanced(by: -5)
 //
-//    coreDataManager.save(triggerRuleOccurrence: occurrence) { savedEventData in
-//      XCTAssertEqual(savedEventData.occurrenceKey, key)
-//      XCTAssertGreaterThan(savedEventData.createdAt, date)
+//    coreDataManager.save(triggerRuleOccurrence: occurrence) { savedPlacementData in
+//      XCTAssertEqual(savedPlacementData.occurrenceKey, key)
+//      XCTAssertGreaterThan(savedPlacementData.createdAt, date)
 //      expectation2.fulfill()
 //    }
 //
@@ -139,8 +139,8 @@ class CoreDataManagerTests: XCTestCase {
   func test_saveTriggerRuleOccurrence() {
     let key = "abc"
     let maxCount = 10
-    let interval: TriggerRuleOccurrence.Interval = .minutes(60)
-    let occurrence = TriggerRuleOccurrence(
+    let interval: TriggerAudienceOccurrence.Interval = .minutes(60)
+    let occurrence = TriggerAudienceOccurrence(
       key: key,
       maxCount: maxCount,
       interval: interval
@@ -148,9 +148,9 @@ class CoreDataManagerTests: XCTestCase {
     let expectation = expectation(description: "Saved event")
     let date = Date().advanced(by: -5)
 
-    coreDataManager.save(triggerRuleOccurrence: occurrence) { savedEventData in
-      XCTAssertEqual(savedEventData.occurrenceKey, key)
-      XCTAssertGreaterThan(savedEventData.createdAt, date)
+    coreDataManager.save(triggerAudienceOccurrence: occurrence) { savedPlacementData in
+      XCTAssertEqual(savedPlacementData.occurrenceKey, key)
+      XCTAssertGreaterThan(savedPlacementData.createdAt, date)
       expectation.fulfill()
     }
 
@@ -185,19 +185,18 @@ class CoreDataManagerTests: XCTestCase {
 
     let key = "1"
     let maxCount = 10
-    let interval: TriggerRuleOccurrence.Interval = .minutes(60)
-    let occurrence = TriggerRuleOccurrence(
+    let interval: TriggerAudienceOccurrence.Interval = .minutes(60)
+    let occurrence = TriggerAudienceOccurrence(
       key: key,
       maxCount: maxCount,
       interval: interval
     )
 
-
     measure {
       let exp = expectation(description: "Finished")
       Task {
         var count = 0
-        count = await coreDataManager.countTriggerRuleOccurrences(for: occurrence)
+        count = await coreDataManager.countAudienceOccurrences(for: occurrence)
         exp.fulfill()
         XCTAssertEqual(count, 10)
       }
@@ -222,7 +221,7 @@ class CoreDataManagerTests: XCTestCase {
       let name = names[i]
       let count = 1000.0/(2.0*(Double(i)+1.0))
       print("COUNT is ", count)
-      coreDataStack.batchInsertEventData(eventName: name, count: Int(count)) {
+      coreDataStack.batchInsertPlacementData(placementName: name, count: Int(count)) {
         expectation1.fulfill()
       }
     }
@@ -260,7 +259,7 @@ class CoreDataManagerTests: XCTestCase {
 
     var count = 0
     measure {
-      count = coreDataManager.countTriggerRuleOccurrences(for: occurrence)
+      count = coreDataManager.countAudienceOccurrences(for: occurrence)
     }
 
     waitForExpectations(timeout: 2.0) { error in

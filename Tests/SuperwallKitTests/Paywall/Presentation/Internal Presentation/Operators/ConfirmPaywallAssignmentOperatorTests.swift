@@ -22,6 +22,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
@@ -47,6 +48,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
@@ -73,6 +75,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
@@ -104,6 +107,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
@@ -135,6 +139,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)
@@ -166,6 +171,7 @@ final class ConfirmPaywallAssignmentOperatorTests: XCTestCase {
       network: dependencyContainer.network,
       paywallManager: dependencyContainer.paywallManager,
       deviceHelper: dependencyContainer.deviceHelper,
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
       factory: dependencyContainer
     )
     try? await Task.sleep(nanoseconds: 10_000_000)

@@ -16,18 +16,15 @@ final class EvaluateRulesOperatorTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
     let identifier = "abc"
 
-    let inactiveSubscriptionPublisher = CurrentValueSubject<SubscriptionStatus, Never>(SubscriptionStatus.inactive)
-      .eraseToAnyPublisher()
     let request = dependencyContainer.makePresentationRequest(
       .fromIdentifier(identifier, freeTrialOverride: false),
       isDebuggerLaunched: true,
-      subscriptionStatus: inactiveSubscriptionPublisher,
       isPaywallPresented: false,
       type: .getPaywall(.stub())
     )
 
     do {
-      let output = try await Superwall.shared.evaluateRules(
+      let output = try await Superwall.shared.evaluateAudienceFilter(
         from: request
       )
       XCTAssertNil(output.confirmableAssignment)
@@ -48,25 +45,22 @@ final class EvaluateRulesOperatorTests: XCTestCase {
   }
 
   func test_evaluateRules_isNotDebugger() async {
-    let inactiveSubscriptionPublisher = CurrentValueSubject<SubscriptionStatus, Never>(SubscriptionStatus.inactive)
-      .eraseToAnyPublisher()
     let dependencyContainer = DependencyContainer()
     let request = dependencyContainer.makePresentationRequest(
       .explicitTrigger(.stub()),
       isDebuggerLaunched: false,
-      subscriptionStatus: inactiveSubscriptionPublisher,
       isPaywallPresented: false,
       type: .getPaywall(.stub())
     )
 
     do {
-      let output = try await Superwall.shared.evaluateRules(
+      let output = try await Superwall.shared.evaluateAudienceFilter(
         from: request
       )
       XCTAssertNil(output.confirmableAssignment)
 
       switch output.triggerResult {
-      case .eventNotFound:
+      case .placementNotFound:
         break
       default:
         XCTFail("Wrong trigger result")

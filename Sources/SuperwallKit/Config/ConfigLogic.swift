@@ -9,7 +9,7 @@
 import Foundation
 
 enum ConfigLogic {
-  enum TriggerRuleError: Error {
+  enum TriggerAudienceError: Error {
     case noVariantsFound
     case invalidState
   }
@@ -24,94 +24,73 @@ enum ConfigLogic {
     randomiser: (Range<Int>) -> Int = Int.random(in:)
   ) throws -> Experiment.Variant {
     if variants.isEmpty {
-      throw TriggerRuleError.noVariantsFound
+      throw TriggerAudienceError.noVariantsFound
     }
 
     // If there's only one variant, return it.
     // This could have a zero percentage.
     if variants.count == 1,
       let variant = variants.first {
-      return .init(
-        id: variant.id,
-        type: variant.type,
-        paywallId: variant.paywallId
-      )
+      return variant.toExperimentVariant()
     }
 
     // Calculate the total sum of variant percentages.
-    let variantSum = variants.reduce(0) { partialResult, variant in
-      partialResult + variant.percentage
-    }
+    let totalPercentage = variants.reduce(0) { $0 + $1.percentage }
 
     // Something went wrong on the dashboard, where all variants
     // have 0% set. Choose a random one.
-    if variantSum == 0 {
+    if totalPercentage == 0 {
       // Choose a random variant
-      let randomVariantIndex = randomiser(0..<variants.count)
-      let variant = variants[randomVariantIndex]
-      return .init(
-        id: variant.id,
-        type: variant.type,
-        paywallId: variant.paywallId
-      )
+      let randomIndex = randomiser(0..<variants.count)
+      return variants[randomIndex].toExperimentVariant()
     }
 
     // Choose a random percentage e.g. 21
-    let randomPercentage = randomiser(0..<variantSum)
+    let randomPercentage = randomiser(0..<totalPercentage)
 
-    // Normalise the percentage e.g. 21/99 = 0.212
-    let normRandomPercentage = Double(randomPercentage) / Double(variantSum)
+    // Select the variant based on cumulative percentage
+    var cumulativePercentage = 0
 
-    var totalNormVariantPercentage = 0.0
-
-    // Loop through all variants
     for variant in variants {
-      // Calculate the normalised variant percentage, e.g. 20 -> 0.2
-      let normVariantPercentage = Double(variant.percentage) / Double(variantSum)
-
       // Add to total variant percentage
-      totalNormVariantPercentage += normVariantPercentage
+      cumulativePercentage += variant.percentage
 
-      // See if selected is less than total. If it is then break .
-      // e.g. Loop 1: 0.212 < (0 + 0.2) = nope, Loop 2: 0.212 < (0.2 + 0.3) = match
-      if normRandomPercentage < totalNormVariantPercentage {
-        return .init(
-          id: variant.id,
-          type: variant.type,
-          paywallId: variant.paywallId
-        )
+      // See if selected is less than total. If it is then return.
+      // e.g. Loop 1: 21 < (0 + 20) = nope, Loop 2: 21 < (20 + 30) = match
+      if randomPercentage < cumulativePercentage {
+        return variant.toExperimentVariant()
       }
     }
 
-    throw TriggerRuleError.invalidState
+    throw TriggerAudienceError.invalidState
   }
 
-  /// Gets the rules per unique experiment group. If any trigger belongs to an experiment whose rule has
+  /// Gets the audiences per unique experiment group. If any trigger belongs to an experiment whose audience has
   /// already been retrieved, it gets skipped.
   ///
   /// - Parameters:
   ///   - triggers: A set of triggers
   ///
   /// - Returns: A `Set` of `TriggerRule` arrays.
-  static func getRulesPerCampaign(
+  static func getAudienceFiltersPerCampaign(
     from triggers: Set<Trigger>
   ) -> Set<[TriggerRule]> {
     var campaignIds: Set<String> = []
-    var uniqueTriggerRules: Set<[TriggerRule]> = []
+    var uniqueTriggerAudiences: Set<[TriggerRule]> = []
     for trigger in triggers {
-      guard let firstRule = trigger.rules.first else {
+      guard let firstAudience = trigger.audiences.first else {
         continue
       }
-      let campaignId = firstRule.experiment.groupId
+      let campaignId = firstAudience.experiment.groupId
 
       if campaignIds.contains(campaignId) {
         continue
       }
 
       campaignIds.insert(campaignId)
-      uniqueTriggerRules.insert(trigger.rules)
+      uniqueTriggerAudiences.insert(trigger.audiences)
     }
-    return uniqueTriggerRules
+    return uniqueTriggerAudiences
   }
 
   static func chooseAssignments(
@@ -121,31 +100,31 @@ enum ConfigLogic {
     var confirmedAssignments = confirmedAssignments
     var unconfirmedAssignments: [Experiment.ID: Experiment.Variant] = [:]
 
-    let groupedTriggerRules = getRulesPerCampaign(from: triggers)
+    let groupedTriggerAudiences = getAudienceFiltersPerCampaign(from: triggers)
 
-    // Loop through each trigger and each of its rules.
-    for ruleGroup in groupedTriggerRules {
-      for rule in ruleGroup {
-        let availableVariantIds = Set(rule.experiment.variants.map { $0.id })
+    // Loop through each trigger and each of its audiences.
+    for audienceGroup in groupedTriggerAudiences {
+      for audience in audienceGroup {
+        let availableVariantIds = Set(audience.experiment.variants.map { $0.id })
 
         // Check whether we have already chosen a variant for the experiment on disk.
-        if let confirmedVariant = confirmedAssignments[rule.experiment.id] {
-          // If one exists, check it's still in the available variants of the experiment's rules, otherwise reroll.
+        if let confirmedVariant = confirmedAssignments[audience.experiment.id] {
+          // If one exists, check it's still in the available variants of the experiment's audiences, otherwise reroll.
           if !availableVariantIds.contains(confirmedVariant.id) {
             // If we couldn't choose a variant, because of an invalid state, such as no variants available, delete the confirmed assignment.
-            guard let variant = try? Self.chooseVariant(from: rule.experiment.variants) else {
-              confirmedAssignments[rule.experiment.id] = nil
+            guard let variant = try? Self.chooseVariant(from: audience.experiment.variants) else {
+              confirmedAssignments[audience.experiment.id] = nil
               continue
             }
-            unconfirmedAssignments[rule.experiment.id] = variant
-            confirmedAssignments[rule.experiment.id] = nil
+            unconfirmedAssignments[audience.experiment.id] = variant
+            confirmedAssignments[audience.experiment.id] = nil
           }
         } else {
           // No variant found on disk so dice roll to choose a variant and store in memory as an unconfirmed assignment.
-          guard let variant = try? Self.chooseVariant(from: rule.experiment.variants) else {
+          guard let variant = try? Self.chooseVariant(from: audience.experiment.variants) else {
             continue
           }
-          unconfirmedAssignments[rule.experiment.id] = variant
+          unconfirmedAssignments[audience.experiment.id] = variant
         }
       }
     }
@@ -183,7 +162,7 @@ enum ConfigLogic {
     }
 
     return triggers.filter {
-      !preloadingDisabled.triggers.contains($0.eventName)
+      !preloadingDisabled.triggers.contains($0.placementName)
     }
   }
 
@@ -201,19 +180,19 @@ enum ConfigLogic {
     for assignment in assignments {
       // Get the trigger with the matching experiment ID
       guard let trigger = triggers.first(
-        where: { $0.rules.contains(where: { $0.experiment.id == assignment.experimentId }) }
+        where: { $0.audiences.contains(where: { $0.experiment.id == assignment.experimentId }) }
       ) else {
         continue
       }
       // Get the variant with the matching variant ID
-      guard let variantOption = trigger.rules.compactMap({
+      guard let variantOption = trigger.audiences.compactMap({
         $0.experiment.variants.first { $0.id == assignment.variantId }
       }).first else {
         continue
       }
 
       // Save this to disk, remove any unconfirmed assignments with the same experiment ID.
-      confirmedAssignments[assignment.experimentId] = variantOption.toVariant()
+      confirmedAssignments[assignment.experimentId] = variantOption.toExperimentVariant()
       unconfirmedAssignments[assignment.experimentId] = nil
     }
 
@@ -263,34 +242,34 @@ enum ConfigLogic {
     var confirmedAssignments = confirmedAssignments
 
     let confirmedExperimentIds = Set(confirmedAssignments.keys)
-    let triggerRulesPerCampaign = getRulesPerCampaign(from: triggers)
+    let audienceFiltersPerCampaign = getAudienceFiltersPerCampaign(from: triggers)
 
-    // Loop through all the rules and check their preloading behaviour.
+    // Loop through all the audiences and check their preloading behaviour.
     // If they should never preload or set to ifTrue but don't match,
     // skip the experiment.
     var allExperimentIds: Set<String> = []
     var skippedExperimentIds: Set<String> = []
 
-    for campaignRules in triggerRulesPerCampaign {
-      for rule in campaignRules {
-        allExperimentIds.insert(rule.experiment.id)
+    for campaignAudienceFilters in audienceFiltersPerCampaign {
+      for audienceFilter in campaignAudienceFilters {
+        allExperimentIds.insert(audienceFilter.experiment.id)
 
-        switch rule.preload.behavior {
+        switch audienceFilter.preload.behavior {
         case .ifTrue:
           let outcome = await expressionEvaluator.evaluateExpression(
-            fromRule: rule,
-            eventData: nil
+            fromAudienceFilter: audienceFilter,
+            placementData: nil
           )
           switch outcome {
           case .noMatch:
-            skippedExperimentIds.insert(rule.experiment.id)
+            skippedExperimentIds.insert(audienceFilter.experiment.id)
           case .match:
             continue
           }
         case .always:
           continue
         case .never:
-          skippedExperimentIds.insert(rule.experiment.id)
+          skippedExperimentIds.insert(audienceFilter.experiment.id)
         }
       }
     }
@@ -330,8 +309,8 @@ enum ConfigLogic {
     unconfirmedAssignments: [Experiment.ID: Experiment.Variant]
   ) -> Set<String> {
     let mergedAssignments = confirmedAssignments.merging(unconfirmedAssignments)
-    let groupedTriggerRules = getRulesPerCampaign(from: triggers)
-    let triggerExperimentIds = groupedTriggerRules.flatMap { $0.map { $0.experiment.id } }
+    let groupedTriggerAudiences = getAudienceFiltersPerCampaign(from: triggers)
+    let triggerExperimentIds = groupedTriggerAudiences.flatMap { $0.map { $0.experiment.id } }
 
     var identifiers = Set<String>()
     for experimentId in triggerExperimentIds {
@@ -347,17 +326,16 @@ enum ConfigLogic {
     return identifiers
   }
 
-  static func getTriggersByEventName(from triggers: Set<Trigger>) -> [String: Trigger] {
+  static func getTriggersByPlacementName(from triggers: Set<Trigger>) -> [String: Trigger] {
     let triggersDictionary = triggers.reduce([String: Trigger]()) { result, trigger in
       var result = result
-      result[trigger.eventName] = trigger
+      result[trigger.placementName] = trigger
       return result
     }
     return triggersDictionary
   }
 
-  /// Gets the paywall IDs that no longer exist in the newly retrieved config, minus
-  /// any presenting paywall.
+  /// Gets the paywall IDs that no longer exist in the newly retrieved config.
   static func getRemovedOrChangedPaywallIds(
     oldConfig: Config,
     newConfig: Config
@@ -385,5 +363,14 @@ enum ConfigLogic {
       )
 
     return removedOrChangedPaywallIds
+  }
+
+  /// Returns the entitlements mapped to a product ID.
+  static func extractEntitlements(
+    from config: Config
+  ) -> [String: Set<Entitlement>] {
+    return Dictionary(
+      uniqueKeysWithValues: config.products.map { ($0.id, $0.entitlements) }
+    )
   }
 }

@@ -4,92 +4,92 @@
 //
 //  Created by Jake Mor on 8/16/21.
 //
+// swiftlint:disable line_length
 
 import Foundation
 import Combine
 
 extension Superwall {
-  /// Tracks an analytical event by sending it to the server and, for internal Superwall events, the delegate.
+  /// Tracks an analytical event by sending it to the server and, for internal Superwall placements, the delegate.
   ///
   /// - Parameters:
-  ///   - trackableEvent: The event you want to track.
-  ///   - audienceFilterParams: Any extra non-Superwall parameters that you want to track.
+  ///   - placement: The placement you want to track.
 	@discardableResult
-  func track(_ event: Trackable) async -> TrackingResult {
-    // Get parameters to be sent to the delegate and stored in an event.
-    let eventCreatedAt = Date()
+  func track(_ placement: Trackable) async -> TrackingResult {
+    // Get parameters to be sent to the delegate and stored in an placement.
+    let placementCreatedAt = Date()
     let parameters = await TrackingLogic.processParameters(
-      fromTrackableEvent: event,
+      fromTrackablePlacement: placement,
       appSessionId: dependencyContainer.appSessionManager.appSession.id
     )
 
-    // For a trackable superwall event, send params to delegate
-    if let trackedEvent = event as? TrackableSuperwallEvent {
-      let info = SuperwallEventInfo(
-        event: trackedEvent.superwallEvent,
+    // For a trackable superwall placement, send params to delegate
+    if let trackedPlacement = placement as? TrackableSuperwallPlacement {
+      let info = SuperwallPlacementInfo(
+        placement: trackedPlacement.superwallPlacement,
         params: parameters.delegateParams
       )
 
-      await dependencyContainer.delegateAdapter.handleSuperwallEvent(withInfo: info)
+      await dependencyContainer.delegateAdapter.handleSuperwallPlacement(withInfo: info)
 
       Logger.debug(
         logLevel: .debug,
-        scope: .events,
-        message: "Logged Event",
+        scope: .placements,
+        message: "Logged Placement",
         info: parameters.audienceFilterParams
       )
     }
 
-    let eventData = EventData(
-      name: event.rawName,
+    let placementData = PlacementData(
+      name: placement.rawName,
       parameters: JSON(parameters.audienceFilterParams),
-      createdAt: eventCreatedAt
+      createdAt: placementCreatedAt
     )
 
     // If config doesn't exist yet we rely on previous saved feature flag
-    // to determine whether to disable verbose events.
-    let existingDisableVerboseEvents = dependencyContainer.configManager.config?.featureFlags.disableVerboseEvents
-    let previousDisableVerboseEvents = dependencyContainer.storage.get(DisableVerboseEvents.self)
+    // to determine whether to disable verbose placements.
+    let existingDisableVerbosePlacements = dependencyContainer.configManager.config?.featureFlags.disableVerbosePlacements
+    let previousDisableVerbosePlacements = dependencyContainer.storage.get(DisableVerbosePlacements.self)
 
-    let verboseEvents = existingDisableVerboseEvents ?? previousDisableVerboseEvents
+    let verbosePlacements = existingDisableVerbosePlacements ?? previousDisableVerbosePlacements
 
-    if TrackingLogic.isNotDisabledVerboseEvent(
-      event,
-      disableVerboseEvents: verboseEvents,
+    if TrackingLogic.isNotDisabledVerbosePlacement(
+      placement,
+      disableVerbosePlacements: verbosePlacements,
       isSandbox: dependencyContainer.makeIsSandbox()
     ) {
-      await dependencyContainer.eventsQueue.enqueue(
-        data: eventData.jsonData,
-        from: event
+      await dependencyContainer.placementsQueue.enqueue(
+        data: placementData.jsonData,
+        from: placement
       )
     }
-    dependencyContainer.storage.coreDataManager.saveEventData(eventData)
+    dependencyContainer.storage.coreDataManager.savePlacementData(placementData)
 
-    if event.canImplicitlyTriggerPaywall {
+    if placement.canImplicitlyTriggerPaywall {
       Task.detached { [weak self] in
         await self?.handleImplicitTrigger(
-          forEvent: event,
-          withData: eventData
+          forPlacement: placement,
+          withData: placementData
         )
       }
 		}
 
     let result = TrackingResult(
-      data: eventData,
+      data: placementData,
       parameters: parameters
     )
 		return result
   }
 
-  /// Attemps to implicitly trigger a paywall for a given analytical event.
+  /// Attemps to implicitly trigger a paywall for a given analytical placement.
   ///
   ///  - Parameters:
-  ///     - event: The tracked event.
-  ///     - eventData: The event data that could trigger a paywall.
+  ///     - placement: The tracked placement.
+  ///     - placementData: The placement data that could trigger a paywall.
   @MainActor
   func handleImplicitTrigger(
-    forEvent event: Trackable,
-    withData eventData: EventData
+    forPlacement placement: Trackable,
+    withData placementData: PlacementData
   ) async {
     // Assign the current register task while capturing the previous one.
     previousRegisterTask = Task { [weak self, previousRegisterTask] in
@@ -97,18 +97,18 @@ extension Superwall {
       await previousRegisterTask?.value
 
       await self?.internallyHandleImplicitTrigger(
-        forEvent: event,
-        withData: eventData
+        forPlacement: placement,
+        withData: placementData
       )
     }
   }
 
   @MainActor
   private func internallyHandleImplicitTrigger(
-    forEvent event: Trackable,
-    withData eventData: EventData
+    forPlacement placement: Trackable,
+    withData placementData: PlacementData
   ) async {
-    let presentationInfo: PresentationInfo = .implicitTrigger(eventData)
+    let presentationInfo: PresentationInfo = .implicitTrigger(placementData)
 
     var request = dependencyContainer.makePresentationRequest(
       presentationInfo,
@@ -117,14 +117,14 @@ extension Superwall {
     )
 
     do {
-      try await waitForSubsStatusAndConfig(request, paywallStatePublisher: nil)
+      try await waitForEntitlementsAndConfig(request, paywallStatePublisher: nil)
     } catch {
       return logErrors(from: request, error)
     }
 
     let triggeringOutcome = TrackingLogic.canTriggerPaywall(
-      event,
-      triggers: Set(dependencyContainer.configManager.triggersByEventName.keys),
+      placement,
+      triggers: Set(dependencyContainer.configManager.triggersByPlacementName.keys),
       paywallViewController: paywallViewController
     )
 
@@ -144,7 +144,7 @@ extension Superwall {
       // the statePublisher. Others like app_launch are fine to skip and users are relying
       // on paywallPresentationRequest for those.
       let presentationResult = await internallyGetPresentationResult(
-        forEvent: event,
+        forPlacement: placement,
         requestType: .handleImplicitTrigger
       )
       guard case .paywall = presentationResult else {

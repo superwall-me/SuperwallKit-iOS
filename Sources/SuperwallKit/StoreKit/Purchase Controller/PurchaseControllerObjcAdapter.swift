@@ -15,7 +15,7 @@ final class PurchaseControllerObjcAdapter: PurchaseController {
     self.objcController = objcController
   }
 
-  func purchase(product: SKProduct) async -> PurchaseResult {
+  func purchase(product: StoreProduct) async -> PurchaseResult {
     return await withCheckedContinuation { continuation in
       objcController.purchase(product: product) { result, error in
         if let error = error {

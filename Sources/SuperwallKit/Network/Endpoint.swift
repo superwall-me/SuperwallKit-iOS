@@ -102,7 +102,7 @@ extension Endpoint where
   Response == Paywall {
   static func paywall(
     withIdentifier identifier: String? = nil,
-    fromEvent event: EventData? = nil,
+    fromPlacement placement: PlacementData? = nil,
     retryCount: Int,
     appUserId: String?,
     apiKey: String,
@@ -119,8 +119,8 @@ extension Endpoint where
         config: config,
         locale: locale
       )
-    } else if let event = event {
-      let bodyDict = ["event": event.jsonData]
+    } else if let placement = placement {
+      let bodyDict = ["event": placement.jsonData]
       bodyData = try? JSONEncoder.toSnakeCase.encode(bodyDict)
     } else if let appUserId = appUserId {
       let body = PaywallRequestBody(appUserId: appUserId)

@@ -1,11 +1,12 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 19/01/2023.
 // swiftlint:disable all
 
 import XCTest
+
 @testable import SuperwallKit
 
 final class PaywallMessageHandlerTests: XCTestCase {
@@ -13,7 +14,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_handleTemplateParams() async {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -30,7 +30,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
     messageHandler.delegate = delegate
     messageHandler.handle(.templateParamsAndUserAttributes)
 
-    try? await Task.sleep(nanoseconds: 500_000_000)
+    try? await Task.sleep(nanoseconds: 800_000_000)
 
     XCTAssertTrue(webView.willHandleJs)
   }
@@ -39,7 +39,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_onReady() async {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -66,7 +65,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_close() {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -90,7 +88,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_openUrl() {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -116,7 +113,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_openUrlInSafari() {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -142,7 +138,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_openDeepLink() {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -157,7 +152,7 @@ final class PaywallMessageHandlerTests: XCTestCase {
       webView: webView
     )
     messageHandler.delegate = delegate
-    
+
     let url = URL(string: "exampleapp://foo")!
     messageHandler.handle(.openDeepLink(url: url))
 
@@ -168,7 +163,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_restore() {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -192,7 +186,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_purchaseProduct() {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -217,7 +210,6 @@ final class PaywallMessageHandlerTests: XCTestCase {
   func test_custom() {
     let dependencyContainer = DependencyContainer()
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )

@@ -25,4 +25,22 @@ enum SystemInfo {
     Notification.Name.NSExtensionHostWillEnterForeground
     #endif
   }
+
+  static var applicationDidBecomeActiveNotification: Notification.Name? {
+    #if os(iOS) || os(tvOS) || os(visionOS) || targetEnvironment(macCatalyst)
+    return UIApplication.didBecomeActiveNotification
+    #elseif os(macOS)
+    return NSApplication.didBecomeActiveNotification
+    #elseif os(watchOS)
+    if #available(watchOS 9, *) {
+      return WKApplication.didBecomeActiveNotification
+    } else if #available(watchOS 7, *) {
+      // Work around for "Symbol not found" dyld crashes on watchOS 7.0..<9.0
+      return Notification.Name("WKApplicationDidBecomeActiveNotification")
+    } else {
+      // There's no equivalent notification available on watchOS <7.
+      return nil
+    }
+    #endif
+  }
 }

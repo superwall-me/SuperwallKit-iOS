@@ -17,6 +17,29 @@ public final class SuperwallOptions: NSObject, Encodable {
   /// Configures the appearance and behaviour of paywalls.
   public var paywalls = PaywallOptions()
 
+  /// An enum representing the StoreKit versions the SDK should use.
+  @objc(SWKStoreKitVersion)
+  public enum StoreKitVersion: Int, Encodable, CustomStringConvertible {
+    /// Use StoreKit 1.
+    case storeKit1
+
+    /// Use StoreKit 2.
+    case storeKit2
+
+    public var description: String {
+      switch self {
+      case .storeKit1: return "STOREKIT1"
+      case .storeKit2: return "STOREKIT2"
+      }
+    }
+  }
+
+  /// The StoreKit version that the SDK should use.
+  ///
+  /// The SDK will use StoreKit 2 by default if the app is running on iOS 15+, otherwise it
+  /// will fallback to StoreKit 1.
+  public var storeKitVersion: StoreKitVersion
+
   /// **WARNING**:  The different network environments that the SDK should use.
   /// Only use this enum to set ``SuperwallOptions/networkEnvironment-swift.property``
   ///  if told so explicitly by the Superwall team.
@@ -133,21 +156,21 @@ public final class SuperwallOptions: NSObject, Encodable {
   /// received the go-ahead from the Superwall team.
   public var networkEnvironment: NetworkEnvironment = .release
 
-  /// A boolean that determines whether Superwall should observe StoreKit 1 purchases outside of Superwall. Defaults to `false`.
+  /// A boolean that determines whether Superwall should observe StoreKit purchases outside of Superwall. Defaults to `false`.
   ///
-  /// When `true`, Superwall will observe StoreKit 1 transactions and report them in your Superwall dashboard. Superwall will not finish transactions made outside of Superwall.
+  /// When `true`, Superwall will observe StoreKit transactions and report them in your Superwall dashboard. Superwall will not finish transactions made outside of Superwall.
   ///
   /// - Note: You cannot use ``Superwall/purchase(_:)`` while this is `true`.
   public var shouldObservePurchases = false
 
-  /// Enables the sending of non-Superwall tracked events and properties back to the Superwall servers.
+  /// Enables the sending of non-Superwall tracked placements and properties back to the Superwall servers.
   /// Defaults to `true`.
   ///
   /// Set this to `false` to stop external data collection. This will not affect
   /// your ability to create triggers based on properties.
   public var isExternalDataCollectionEnabled = true
 
-  /// Sets the device locale identifier to use when evaluating rules.
+  /// Sets the device locale identifier to use when evaluating audience filters.
   ///
   /// This defaults to the `autoupdatingCurrent` locale identifier. However, you can set
   /// this to any locale identifier to override it. E.g. `en_GB`. This is typically used for testing
@@ -204,6 +227,24 @@ public final class SuperwallOptions: NSObject, Encodable {
     case isExternalDataCollectionEnabled
     case localeIdentifier
     case isGameControllerEnabled
+  }
+
+  public override init() {
+    let key = "SKIncludeConsumableInAppPurchaseHistory"
+    if let includeConsumableHistory = Bundle.main.object(forInfoDictionaryKey: key) as? Bool,
+      includeConsumableHistory {
+      if #available(iOS 18.0, *) {
+        self.storeKitVersion = .storeKit2
+      } else {
+        self.storeKitVersion = .storeKit1
+      }
+    } else {
+      if #available(iOS 15.0, *) {
+        self.storeKitVersion = .storeKit2
+      } else {
+        self.storeKitVersion = .storeKit1
+      }
+    }
   }
 
   public func encode(to encoder: Encoder) throws {

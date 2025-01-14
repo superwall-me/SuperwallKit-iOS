@@ -7,42 +7,44 @@
 
 import Foundation
 
-/// The result of a tracking an event.
+/// The result of a tracking a placement.
 ///
-/// Contains the possible cases resulting from tracking an event.
+/// Contains the possible cases resulting from tracking a placement.
 public enum PresentationResult: Sendable, Equatable {
-  /// This event was not found on the dashboard.
+  /// This placement was not found on the dashboard.
   ///
-  /// Please make sure you have added the event to a campaign on the dashboard and
+  /// Please make sure you have added the placement to a campaign on the dashboard and
   /// double check its spelling.
-  case eventNotFound
+  case placementNotFound
 
-  /// No matching rule was found for this trigger so no paywall will be shown.
-  case noRuleMatch
+  /// No matching audience was found for this placement so no paywall will be shown.
+  case noAudienceMatch
 
-  /// A matching rule was found and this user will be shown a paywall.
+  /// A matching audience was found and this user will be shown a paywall.
   ///
   /// - Parameters:
-  ///   - experiment: The experiment associated with the trigger.
+  ///   - experiment: The experiment associated with the placement.
   case paywall(Experiment)
 
-  /// A matching rule was found and this user was assigned to a holdout group so will not be shown a paywall.
+  /// A matching audience was found and this user was assigned to a holdout group so will not be shown a paywall.
   ///
   /// - Parameters:
-  ///   - experiment: The experiment  associated with the trigger.
+  ///   - experiment: The experiment associated with the placement.
   case holdout(Experiment)
-
-  /// The user is subscribed.
-  ///
-  /// This means ``Superwall/subscriptionStatus`` is set to `.active`. If you're
-  /// letting Superwall handle subscription-related logic, it will be based on the on-device
-  /// receipts. Otherwise it'll be based on the value you've set.
-  ///
-  /// By default, paywalls do not show to users who are already subscribed. You can override this
-  /// behavior in the paywall editor.
-  case userIsSubscribed
 
   /// The paywall is unavailable. This could be because there's no internet, no view controller to
   /// present from, or the paywall is already presented.
   case paywallNotAvailable
+
+  // MARK: - Graveyard
+  /// This event was not found on the dashboard.
+  ///
+  /// Please make sure you have added the placement to a campaign on the dashboard and
+  /// double check its spelling.
+  @available(*, unavailable, renamed: "placementNotFound")
+  case eventNotFound
+
+  /// No matching audience was found for this placement so no paywall will be shown.
+  @available(*, unavailable, renamed: "noAudienceMatch")
+  case noRuleMatch
 }

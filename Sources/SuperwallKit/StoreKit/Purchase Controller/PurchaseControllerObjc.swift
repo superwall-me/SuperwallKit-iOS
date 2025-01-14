@@ -14,11 +14,11 @@ import StoreKit
 /// more control, you can return a ``PurchaseControllerObjc`` when configuring the SDK via
 /// ``Superwall/configure(apiKey:purchaseController:options:completion:)-52tke``.
 ///
-/// When implementing this, you also need to set the subscription status using
-/// ``Superwall/subscriptionStatus``.
+/// When implementing this, you also need to set the entitlements using
+/// `Superwall.shared.entitlements.set(_:)`.
 ///
 /// To learn how to implement the ``PurchaseControllerObjc`` in your app
-/// and best practices, see [Purchases and Subscription Status](https://docs.superwall.com/docs/advanced-configuration).
+/// and best practices, see [Purchases and Entitlements](https://docs.superwall.com/docs/advanced-configuration).
 @objc(SWKPurchaseController)
 public protocol PurchaseControllerObjc: AnyObject {
   /// Called when the user initiates purchasing of a product.
@@ -33,13 +33,13 @@ public protocol PurchaseControllerObjc: AnyObject {
   ///    **Note:** Make sure you handle all cases of ``PurchaseResult``.
   @MainActor
   @objc func purchase(
-    product: SKProduct,
+    product: StoreProduct,
     completion: @escaping (PurchaseResultObjc, Error?) -> Void
   )
 
   /// Called when the user initiates a restore.
   ///
-  /// Add your restore logic here, making sure that the user's subscription status is updated after restore,
+  /// Add your restore logic here, making sure that the user's entitlements are updated after restore,
   /// and call the completion block.
   /// 
   /// - Parameters:

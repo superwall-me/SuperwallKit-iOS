@@ -79,14 +79,14 @@ class Network {
 
   func getPaywall(
     withId identifier: String? = nil,
-    fromEvent event: EventData? = nil,
+    fromPlacement placement: PlacementData? = nil,
     retryCount: Int
   ) async throws -> Paywall {
     do {
       return try await urlSession.request(
         .paywall(
           withIdentifier: identifier,
-          fromEvent: event,
+          fromPlacement: placement,
           retryCount: retryCount,
           appUserId: factory.identityManager.userId,
           apiKey: factory.storage.apiKey,
@@ -103,7 +103,7 @@ class Network {
           message: "Request Failed: /paywall",
           info: [
             "identifier": identifier ?? "none",
-            "event": event.debugDescription
+            "event": placement.debugDescription
           ],
           error: error
         )

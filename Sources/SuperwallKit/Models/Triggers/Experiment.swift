@@ -10,8 +10,8 @@ import Foundation
 
 /// A campaign experiment that was assigned to a user.
 ///
-/// An experiment is part of a [Campaign Rule](https://docs.superwall.com/docs/campaign-rules)
-/// defined in the Superwall dashboard. When a rule is matched, the user is
+/// An experiment is part of a [Campaign Audience](https://docs.superwall.com/docs/campaign-rules)
+/// defined in the Superwall dashboard. When an audience is matched, the user is
 /// assigned to an experiment, which is a set of paywall variants determined
 /// by probabilities. An experiment will result in a user seeing a paywall unless
 /// they are in a holdout group.

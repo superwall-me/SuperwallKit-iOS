@@ -78,20 +78,29 @@ final class SuperwallDelegateAdapter {
   }
 
   @MainActor
-  func handleSuperwallEvent(withInfo eventInfo: SuperwallEventInfo) {
+  func handleSuperwallPlacement(withInfo placementInfo: SuperwallPlacementInfo) {
     if let swiftDelegate = swiftDelegate {
-      swiftDelegate.handleSuperwallEvent(withInfo: eventInfo)
+      swiftDelegate.handleSuperwallPlacement(withInfo: placementInfo)
     } else if let objcDelegate = objcDelegate {
-      objcDelegate.handleSuperwallEvent?(withInfo: eventInfo)
+      objcDelegate.handleSuperwallPlacement?(withInfo: placementInfo)
     }
   }
 
   @MainActor
-  func subscriptionStatusDidChange(to newValue: SubscriptionStatus) {
+  func entitlementStatusDidChange(
+    from oldValue: EntitlementStatus,
+    to newValue: EntitlementStatus
+  ) {
     if let swiftDelegate = swiftDelegate {
-      swiftDelegate.subscriptionStatusDidChange(to: newValue)
+      swiftDelegate.entitlementStatusDidChange(
+        from: oldValue,
+        to: newValue
+      )
     } else if let objcDelegate = objcDelegate {
-      objcDelegate.subscriptionStatusDidChange?(to: newValue)
+      objcDelegate.entitlementStatusDidChange?(
+        from: oldValue.toObjc(),
+        to: newValue.toObjc()
+      )
     }
   }
 

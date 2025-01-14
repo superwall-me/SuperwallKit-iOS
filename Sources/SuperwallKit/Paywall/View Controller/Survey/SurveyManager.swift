@@ -150,8 +150,8 @@ final class SurveyManager {
     if survey.includeCloseOption {
       let closeButton = UIAlertAction(title: "Close", style: .cancel) { _ in
         Task {
-          let event = InternalSuperwallEvent.SurveyClose()
-          await Superwall.shared.track(event)
+          let surveyClose = InternalSuperwallPlacement.SurveyClose()
+          await Superwall.shared.track(surveyClose)
         }
         completion(.show)
       }
@@ -174,16 +174,16 @@ final class SurveyManager {
     alertController.dismiss(animated: true) {
       // Always complete without tracking if debugger launched.
       Task {
-        let event = InternalSuperwallEvent.SurveyResponse(
+        let surveyResponse = InternalSuperwallPlacement.SurveyResponse(
           survey: survey,
           selectedOption: option,
           customResponse: customResponse,
           paywallInfo: paywallInfo
         )
-        await Superwall.shared.track(event)
+        await Superwall.shared.track(surveyResponse)
 
         let outcome = TrackingLogic.canTriggerPaywall(
-          event,
+          surveyResponse,
           triggers: factory.makeTriggers(),
           paywallViewController: paywallViewController
         )

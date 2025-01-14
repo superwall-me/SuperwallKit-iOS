@@ -8,15 +8,20 @@
 import Foundation
 
 struct Trigger: Codable, Hashable, Equatable {
-  var eventName: String
-  var rules: [TriggerRule]
+  enum CodingKeys: String, CodingKey {
+    case audiences = "rules"
+    case placementName = "eventName"
+  }
+
+  var placementName: String
+  var audiences: [TriggerRule]
 }
 
 extension Trigger: Stubbable {
   static func stub() -> Trigger {
     return Trigger(
-      eventName: "an_event",
-      rules: []
+      placementName: "campaign_trigger",
+      audiences: []
     )
   }
 }

@@ -13,7 +13,7 @@ extension Superwall {
   func getPresentationResult(for request: PresentationRequest) async -> PresentationResult {
     do {
       let paywallComponents = try await getPaywallComponents(request)
-      let triggerResult = paywallComponents.rulesOutcome.triggerResult
+      let triggerResult = paywallComponents.audienceOutcome.triggerResult
       let presentationResult = GetPresentationResultLogic.convertTriggerResult(triggerResult)
       return presentationResult
     } catch let error as PresentationPipelineError {
@@ -44,21 +44,19 @@ extension Superwall {
     }
 
     switch error {
-    case .userIsSubscribed:
-      return .userIsSubscribed
     case .noPaywallViewController:
       return .paywallNotAvailable
-    case .noRuleMatch:
-      return .noRuleMatch
+    case .noAudienceMatch:
+      return .noAudienceMatch
     case .holdout(let experiment):
       return .holdout(experiment)
-    case .eventNotFound:
-      return .eventNotFound
+    case .placementNotFound:
+      return .placementNotFound
     case .debuggerPresented,
       .noPresenter,
       .paywallAlreadyPresented,
       .noConfig,
-      .subscriptionStatusTimeout:
+      .entitlementsTimeout:
       return .paywallNotAvailable
     }
   }

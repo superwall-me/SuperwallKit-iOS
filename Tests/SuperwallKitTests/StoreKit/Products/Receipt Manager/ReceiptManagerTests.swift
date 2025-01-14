@@ -9,46 +9,66 @@
 import XCTest
 @testable import SuperwallKit
 
+// TODO: SK2 Tests
 class ReceiptManagerTests: XCTestCase {
   let dependencyContainer = DependencyContainer()
   lazy var purchaseController: AutomaticPurchaseController = {
-    return AutomaticPurchaseController(factory: dependencyContainer)
+    return AutomaticPurchaseController(
+      factory: dependencyContainer,
+      entitlementsInfo: dependencyContainer.entitlementsInfo
+    )
   }()
 
   func test_loadPurchasedProducts_nilProducts() async {
     let product = MockSkProduct(subscriptionGroupIdentifier: "abc")
-    let productsFetcher = ProductsFetcherSK1Mock(
-      productCompletionResult: .success([StoreProduct(sk1Product: product)])
-    )
     let getReceiptData: () -> Data = {
       return MockReceiptData.newReceipt
     }
+    let productsFetcher = ProductsFetcherSK1Mock(
+      productCompletionResult: .success([StoreProduct(sk1Product: product, entitlements: [.stub()])]),
+      entitlementsInfo: dependencyContainer.entitlementsInfo
+    )
+    let productsManager = ProductsManager(
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
+      storeKitVersion: .storeKit1,
+      productsFetcher: productsFetcher
+    )
+    let sk1ReceiptManager = SK1ReceiptManager(receiptData: getReceiptData)
     let receiptManager = ReceiptManager(
-      delegate: productsFetcher,
-      receiptDelegate: purchaseController,
-      receiptData: getReceiptData
+      storeKitVersion: .storeKit1,
+      productsManager: productsManager,
+      receiptManager: sk1ReceiptManager,
+      receiptDelegate: purchaseController
     )
 
-    _ = await receiptManager.loadPurchasedProducts()
-    let purchasedSubscriptionGroupIds = await receiptManager.purchasedSubscriptionGroupIds
+    await receiptManager.loadPurchasedProducts()
+    let purchasedSubscriptionGroupIds = sk1ReceiptManager.purchasedSubscriptionGroupIds
     XCTAssertEqual(purchasedSubscriptionGroupIds, ["abc"])
   }
 
   func test_loadPurchasedProducts_productError() async {
-    let productsFetcher = ProductsFetcherSK1Mock(
-      productCompletionResult: .failure(TestError("error"))
-    )
     let getReceiptData: () -> Data = {
       return MockReceiptData.newReceipt
     }
+    let productsFetcher = ProductsFetcherSK1Mock(
+      productCompletionResult: .failure(TestError("error")),
+      entitlementsInfo: dependencyContainer.entitlementsInfo
+    )
+    let productsManager = ProductsManager(
+      entitlementsInfo: dependencyContainer.entitlementsInfo,
+      storeKitVersion: .storeKit1,
+      productsFetcher: productsFetcher
+    )
+    let sk1ReceiptManager = SK1ReceiptManager(receiptData: getReceiptData)
     let receiptManager = ReceiptManager(
-      delegate: productsFetcher,
-      receiptDelegate: purchaseController,
-      receiptData: getReceiptData
+      storeKitVersion: .storeKit1,
+      productsManager: productsManager,
+      receiptManager: sk1ReceiptManager,
+      receiptDelegate: purchaseController
     )
 
-    _ = await receiptManager.loadPurchasedProducts()
-    let purchasedSubscriptionGroupIds = await receiptManager.purchasedSubscriptionGroupIds
+    await receiptManager.loadPurchasedProducts()
+    let purchasedSubscriptionGroupIds = sk1ReceiptManager.purchasedSubscriptionGroupIds
     XCTAssertNil(purchasedSubscriptionGroupIds)
   }
 

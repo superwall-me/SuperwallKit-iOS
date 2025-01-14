@@ -8,7 +8,7 @@
 import Foundation
 
 extension Superwall {
-  /// Logs the presentation request with a custom message and gets debug info for the event.
+  /// Logs the presentation request with a custom message and gets debug info for the placement.
   ///
   /// - Parameters:
   ///    - request: The presentation request.
@@ -34,10 +34,10 @@ extension Superwall {
     case .confirmAllAssignments:
       message += "Superwall.shared.confirmAllAssignments"
     }
-    let eventData = request.presentationInfo.eventData
+    let placementData = request.presentationInfo.placementData
     let debugInfo: [String: Any] = [
       "on": request.presenter.debugDescription,
-      "fromEvent": eventData.debugDescription as Any
+      "fromPlacement": placementData.debugDescription as Any
     ]
     Logger.debug(
       logLevel: .debug,

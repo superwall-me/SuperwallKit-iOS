@@ -95,7 +95,7 @@ public final class PaywallOptions: NSObject, Encodable {
   /// Set this to `false` to load and cache paywalls and products in a just-in-time fashion.
   ///
   /// If you want to preload them at a later date, you can call ``Superwall/preloadAllPaywalls()``
-  /// or ``Superwall/preloadPaywalls(forEvents:)``
+  /// or ``Superwall/preloadPaywalls(forPlacements:)``
   public var shouldPreload = true
 
   /// Automatically dismisses the paywall when a product is purchased or restored. Defaults to `true`.

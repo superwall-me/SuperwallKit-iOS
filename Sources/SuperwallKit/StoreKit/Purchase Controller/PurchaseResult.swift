@@ -22,7 +22,7 @@ public enum PurchaseResult: Sendable, Equatable {
   /// - `.paymentCancelled`,
   /// - `.overlayTimeout`
   ///
-  /// In StoreKit 2, this is the `.userCancelled` error state.
+  /// In StoreKit 2, this is the `.cancelled` error state.
   ///
   /// With RevenueCat, this is when the `userCancelled` boolean returns `true` from the purchase
   /// method.

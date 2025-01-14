@@ -17,7 +17,7 @@ public enum PaywallCloseReason: Int, Codable, Equatable, Sendable, CustomStringC
 
   /// The paywall was automatically closed because another paywall will show.
   ///
-  /// This prevents ``Superwall/register(event:params:handler:feature:)`` `feature`
+  /// This prevents ``Superwall/register(placement:params:handler:feature:)`` `feature`
   /// block from executing on dismiss of the paywall, because another paywall is set to show
   case forNextPaywall
 

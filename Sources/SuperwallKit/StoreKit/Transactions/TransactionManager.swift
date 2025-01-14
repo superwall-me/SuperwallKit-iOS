@@ -1,22 +1,22 @@
 //
 //  File 2.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 20/10/2022.
 //
 // swiftlint:disable type_body_length file_length line_length function_body_length
 
+import Combine
 import StoreKit
 import UIKit
-import Combine
 
 final class TransactionManager {
   private let storeKitManager: StoreKitManager
   private let receiptManager: ReceiptManager
   private let purchaseController: PurchaseController
-  private let sessionEventsManager: SessionEventsManager
-  private let eventsQueue: EventsQueue
-  private let productsFetcher: ProductsFetcherSK1
+  private let placementsQueue: PlacementsQueue
+  private let purchaseManager: PurchaseManager
+  private let productsManager: ProductsManager
   private let factory: Factory
   typealias Factory = OptionsFactory
     & TriggerFactory
@@ -33,17 +33,17 @@ final class TransactionManager {
     storeKitManager: StoreKitManager,
     receiptManager: ReceiptManager,
     purchaseController: PurchaseController,
-    sessionEventsManager: SessionEventsManager,
-    eventsQueue: EventsQueue,
-    productsFetcher: ProductsFetcherSK1,
+    placementsQueue: PlacementsQueue,
+    purchaseManager: PurchaseManager,
+    productsManager: ProductsManager,
     factory: Factory
   ) {
     self.storeKitManager = storeKitManager
     self.receiptManager = receiptManager
     self.purchaseController = purchaseController
-    self.sessionEventsManager = sessionEventsManager
-    self.eventsQueue = eventsQueue
-    self.productsFetcher = productsFetcher
+    self.placementsQueue = placementsQueue
+    self.purchaseManager = purchaseManager
+    self.productsManager = productsManager
     self.factory = factory
   }
 
@@ -64,8 +64,9 @@ final class TransactionManager {
       guard let storeProduct = await storeKitManager.productsById[productId] else {
         Logger.debug(
           logLevel: .error,
-          scope: .paywallTransactions,
-          message: "Trying to purchase \(productId) but the product has failed to load. Visit https://superwall.com/l/missing-products to diagnose."
+          scope: .transactions,
+          message:
+            "Trying to purchase \(productId) but the product has failed to load. Visit https://superwall.com/l/missing-products to diagnose."
         )
         return .failed(PurchaseError.productUnavailable)
       }
@@ -114,11 +115,13 @@ final class TransactionManager {
       await didRestore()
     case .failed(let error):
       let superwallOptions = factory.makeSuperwallOptions()
-      guard let outcome = TransactionErrorLogic.handle(
-        error,
-        triggers: factory.makeTriggers(),
-        shouldShowPurchaseFailureAlert: superwallOptions.paywalls.shouldShowPurchaseFailureAlert
-      ) else {
+      guard
+        let outcome = TransactionErrorLogic.handle(
+          error,
+          triggers: factory.makeTriggers(),
+          shouldShowPurchaseFailureAlert: superwallOptions.paywalls.shouldShowPurchaseFailureAlert
+        )
+      else {
         await trackFailure(error: error)
         switch state {
         case .observing:
@@ -155,20 +158,41 @@ final class TransactionManager {
     await coordinator.reset()
   }
 
+  @available(iOS 17.2, visionOS 1.1, *)
+  func logSK2ObserverModeTransaction(_ transaction: SK2Transaction) async {
+    guard let product = try? await productsManager.products(
+      identifiers: [transaction.productID],
+      forPaywall: nil,
+      placement: nil
+    ).first else {
+      return
+    }
+    await prepareToPurchase(
+      product: product,
+      purchaseSource: .observeFunc(product)
+    )
+
+    let hasOffer = transaction.offer != nil
+    let coordinator = factory.makePurchasingCoordinator()
+    await coordinator.setIsFreeTrialAvailable(to: hasOffer)
+
+    await didPurchase()
+  }
+
   @MainActor
   @discardableResult
   func tryToRestore(_ restoreSource: RestoreSource) async -> RestorationResult {
     func logAndTrack(
-      state: InternalSuperwallEvent.Restore.State,
+      state: InternalSuperwallPlacement.Restore.State,
       message: String,
       paywallInfo: PaywallInfo
     ) async {
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: message
       )
-      let trackedEvent = InternalSuperwallEvent.Restore(
+      let trackedEvent = InternalSuperwallPlacement.Restore(
         state: state,
         paywallInfo: paywallInfo
       )
@@ -181,9 +205,9 @@ final class TransactionManager {
       paywallViewController: PaywallViewController?
     ) async -> Bool {
       let hasRestored = restorationResult == .restored
-      let isUserSubscribed = Superwall.shared.subscriptionStatus == .active
+      let hasActiveEntitlements = !Superwall.shared.entitlements.active.isEmpty
 
-      if hasRestored && isUserSubscribed {
+      if hasRestored && hasActiveEntitlements {
         await logAndTrack(
           state: .complete,
           message: "Transactions Restored",
@@ -193,8 +217,9 @@ final class TransactionManager {
         return true
       } else {
         var message = "Transactions Failed to Restore."
-        if !isUserSubscribed && hasRestored {
-          message += " The user's subscription status is \"inactive\", but the restoration result is \"restored\". Ensure the subscription status is active before confirming successful restoration."
+        if !hasActiveEntitlements && hasRestored {
+          message +=
+            " The restoration result is \"restored\" but there are no active entitlements. Ensure the active entitlements are set before confirming successful restoration."
         }
         if case .failed(let error) = restorationResult,
           let error = error {
@@ -308,16 +333,17 @@ final class TransactionManager {
     switch source {
     case .internal(let paywallViewController):
       let paywallInfo = await paywallViewController.info
-      let trackedEvent = InternalSuperwallEvent.Transaction(
+
+      let transactionRestore = InternalSuperwallPlacement.Transaction(
         state: .restore(restoreType),
         paywallInfo: paywallInfo,
         product: product,
         transaction: transaction,
         source: .internal,
         isObserved: isObserved,
-        storeKitVersion: .storeKit1
+        storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
       )
-      await Superwall.shared.track(trackedEvent)
+      await Superwall.shared.track(transactionRestore)
       await paywallViewController.webView.messageHandler.handle(.transactionRestore)
 
       let superwallOptions = factory.makeSuperwallOptions()
@@ -325,14 +351,14 @@ final class TransactionManager {
         await Superwall.shared.dismiss(paywallViewController, result: .restored)
       }
     case .external:
-      let trackedEvent = InternalSuperwallEvent.Transaction(
+      let trackedEvent = InternalSuperwallPlacement.Transaction(
         state: .restore(restoreType),
         paywallInfo: .empty(),
         product: product,
         transaction: transaction,
         source: .external,
         isObserved: isObserved,
-        storeKitVersion: .storeKit1
+        storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
       )
       await Superwall.shared.track(trackedEvent)
     }
@@ -342,14 +368,11 @@ final class TransactionManager {
     _ product: StoreProduct,
     purchaseSource: PurchaseSource
   ) async -> PurchaseResult {
-    guard let sk1Product = product.sk1Product else {
-      return .failed(PurchaseError.productUnavailable)
-    }
     switch purchaseSource {
     case .internal:
-      return await purchaseController.purchase(product: sk1Product)
+      return await purchaseController.purchase(product: product)
     case .purchaseFunc:
-      return await factory.purchase(product: sk1Product)
+      return await factory.purchase(product: product)
     case .observeFunc:
       // No-op, there's no way this can be called from observe.
       return .cancelled
@@ -380,7 +403,7 @@ final class TransactionManager {
     case .internal(_, let paywallViewController):
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Error",
         info: [
           "product_id": product.productIdentifier,
@@ -391,14 +414,14 @@ final class TransactionManager {
 
       let paywallInfo = await paywallViewController.info
       Task { [isObserved] in
-        let trackedEvent = InternalSuperwallEvent.Transaction(
+        let trackedEvent = InternalSuperwallPlacement.Transaction(
           state: .fail(.failure(error.safeLocalizedDescription, product)),
           paywallInfo: paywallInfo,
           product: product,
           transaction: nil,
           source: .internal,
           isObserved: isObserved,
-          storeKitVersion: .storeKit1
+          storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
         )
         await Superwall.shared.track(trackedEvent)
         await paywallViewController.webView.messageHandler.handle(.transactionFail)
@@ -407,7 +430,7 @@ final class TransactionManager {
       .observeFunc:
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Error",
         info: [
           "product_id": product.productIdentifier
@@ -416,14 +439,14 @@ final class TransactionManager {
       )
 
       Task { [isObserved] in
-        let trackedEvent = InternalSuperwallEvent.Transaction(
+        let trackedEvent = InternalSuperwallPlacement.Transaction(
           state: .fail(.failure(error.safeLocalizedDescription, product)),
           paywallInfo: .empty(),
           product: product,
           transaction: nil,
           source: .external,
           isObserved: isObserved,
-          storeKitVersion: .storeKit1
+          storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
         )
         await Superwall.shared.track(trackedEvent)
       }
@@ -431,11 +454,13 @@ final class TransactionManager {
   }
 
   func observeTransaction(for productId: String) async {
-    guard let storeProduct = try? await productsFetcher.products(
-      identifiers: [productId],
-      forPaywall: nil,
-      event: nil
-    ).first else {
+    guard
+      let storeProduct = try? await productsManager.products(
+        identifiers: [productId],
+        forPaywall: nil,
+        placement: nil
+      ).first
+    else {
       Logger.debug(
         logLevel: .debug,
         scope: .superwallCore,
@@ -471,11 +496,14 @@ final class TransactionManager {
       isObserved = true
     }
 
+    // Skip transaction start tracking if using StoreKit2 and the source is observeFunc
+    let shouldTrackTransactionStart = !(purchaseManager.isUsingSK2 && isObserved)
+
     switch purchaseSource {
     case .internal(_, let paywallViewController):
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Purchasing",
         info: ["paywall_vc": paywallViewController],
         error: nil
@@ -483,16 +511,16 @@ final class TransactionManager {
 
       let paywallInfo = await paywallViewController.info
 
-      let trackedEvent = InternalSuperwallEvent.Transaction(
+      let transactionStart = InternalSuperwallPlacement.Transaction(
         state: .start(product),
         paywallInfo: paywallInfo,
         product: product,
         transaction: nil,
         source: .internal,
         isObserved: isObserved,
-        storeKitVersion: .storeKit1
+        storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
       )
-      await Superwall.shared.track(trackedEvent)
+      await Superwall.shared.track(transactionStart)
       await paywallViewController.webView.messageHandler.handle(.transactionStart)
 
       await MainActor.run {
@@ -510,20 +538,22 @@ final class TransactionManager {
 
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "External Transaction Purchasing"
       )
 
-      let trackedEvent = InternalSuperwallEvent.Transaction(
-        state: .start(product),
-        paywallInfo: .empty(),
-        product: product,
-        transaction: nil,
-        source: .external,
-        isObserved: isObserved,
-        storeKitVersion: .storeKit1
-      )
-      await Superwall.shared.track(trackedEvent)
+      if shouldTrackTransactionStart {
+        let trackedEvent = InternalSuperwallPlacement.Transaction(
+          state: .start(product),
+          paywallInfo: .empty(),
+          product: product,
+          transaction: nil,
+          source: .external,
+          isObserved: isObserved,
+          storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
+        )
+        await Superwall.shared.track(trackedEvent)
+      }
     }
 
     await factory.makePurchasingCoordinator().beginPurchase(
@@ -550,7 +580,7 @@ final class TransactionManager {
       }
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Succeeded",
         info: [
           "product_id": product.productIdentifier,
@@ -572,14 +602,14 @@ final class TransactionManager {
       if superwallOptions.paywalls.automaticallyDismiss {
         await Superwall.shared.dismiss(
           paywallViewController,
-          result: .purchased(productId: product.productIdentifier)
+          result: .purchased(product)
         )
       }
     case .purchaseFunc,
       .observeFunc:
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Succeeded",
         info: [
           "product_id": product.productIdentifier
@@ -618,23 +648,23 @@ final class TransactionManager {
     case .internal(_, let paywallViewController):
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Abandoned",
         info: ["product_id": product.productIdentifier, "paywall_vc": paywallViewController],
         error: nil
       )
 
       let paywallInfo = await paywallViewController.info
-      let trackedEvent = InternalSuperwallEvent.Transaction(
+      let transactionAbandon = InternalSuperwallPlacement.Transaction(
         state: .abandon(product),
         paywallInfo: paywallInfo,
         product: product,
         transaction: nil,
         source: .internal,
         isObserved: isObserved,
-        storeKitVersion: .storeKit1
+        storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
       )
-      await Superwall.shared.track(trackedEvent)
+      await Superwall.shared.track(transactionAbandon)
       await paywallViewController.webView.messageHandler.handle(.transactionAbandon)
 
       await MainActor.run {
@@ -644,20 +674,20 @@ final class TransactionManager {
       .observeFunc:
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Abandoned",
         info: ["product_id": product.productIdentifier],
         error: nil
       )
 
-      let trackedEvent = InternalSuperwallEvent.Transaction(
+      let trackedEvent = InternalSuperwallPlacement.Transaction(
         state: .abandon(product),
         paywallInfo: .empty(),
         product: product,
         transaction: nil,
         source: .external,
         isObserved: isObserved,
-        storeKitVersion: .storeKit1
+        storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
       )
       await Superwall.shared.track(trackedEvent)
     }
@@ -678,7 +708,7 @@ final class TransactionManager {
     case .internal(_, let paywallViewController):
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Pending",
         info: ["paywall_vc": paywallViewController],
         error: nil
@@ -686,41 +716,42 @@ final class TransactionManager {
 
       let paywallInfo = await paywallViewController.info
 
-      let trackedEvent = InternalSuperwallEvent.Transaction(
+      let transactionFail = InternalSuperwallPlacement.Transaction(
         state: .fail(.pending("Needs parental approval")),
         paywallInfo: paywallInfo,
         product: nil,
         transaction: nil,
         source: .internal,
         isObserved: isObserved,
-        storeKitVersion: .storeKit1
+        storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
       )
-      await Superwall.shared.track(trackedEvent)
+      await Superwall.shared.track(transactionFail)
       await paywallViewController.webView.messageHandler.handle(.transactionFail)
     case .purchaseFunc,
       .observeFunc:
       Logger.debug(
         logLevel: .debug,
-        scope: .paywallTransactions,
+        scope: .transactions,
         message: "Transaction Pending",
         error: nil
       )
 
-      let trackedEvent = InternalSuperwallEvent.Transaction(
+      let trackedEvent = InternalSuperwallPlacement.Transaction(
         state: .fail(.pending("Needs parental approval")),
         paywallInfo: .empty(),
         product: nil,
         transaction: nil,
         source: .external,
         isObserved: isObserved,
-        storeKitVersion: .storeKit1
+        storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
       )
       await Superwall.shared.track(trackedEvent)
     }
 
     await presentAlert(
       title: "Waiting for Approval",
-      message: "Thank you! This purchase is pending approval from your parent. Please try again once it is approved.",
+      message:
+        "Thank you! This purchase is pending approval from your parent. Please try again once it is approved.",
       source: source.toGenericSource()
     )
   }
@@ -742,8 +773,9 @@ final class TransactionManager {
       guard let topMostViewController = await UIViewController.topMostViewController else {
         Logger.debug(
           logLevel: .error,
-          scope: .paywallTransactions,
-          message: "Could not find the top-most view controller to present a transaction alert from."
+          scope: .transactions,
+          message:
+            "Could not find the top-most view controller to present a transaction alert from."
         )
         return
       }
@@ -765,17 +797,34 @@ final class TransactionManager {
     else {
       return
     }
-    let didStartFreeTrial = await coordinator.isFreeTrialAvailable
+
+    // Insert the transaction ID into the cache if observing. This prevents racing with
+    // the SK2 observer.
+    if #available(iOS 17.2, *),
+      let purchaser = purchaseManager.purchaser as? ProductPurchaserSK2,
+      let id = transaction?.sk2Transaction?.id {
+      let observer = purchaser.sk2ObserverModePurchaseDetector
+      await observer.insertToCachedTransactionIds([id])
+    }
+
+    let didStartOffer: Bool
+
+    if #available(iOS 17.2, visionOS 1.1, *),
+      let sk2Transaction = transaction?.sk2Transaction {
+      didStartOffer = sk2Transaction.offer != nil
+    } else {
+      didStartOffer = await coordinator.isFreeTrialAvailable
+    }
 
     var isObserved = false
     if case .observeFunc = source {
       isObserved = true
     }
 
-    let type: InternalSuperwallEvent.Transaction.TransactionType = {
+    let type: TransactionType = {
       if product.subscriptionPeriod == nil {
         return .nonRecurringProductPurchase
-      } else if didStartFreeTrial {
+      } else if didStartOffer {
         return .freeTrialStart
       } else {
         return .subscriptionStart
@@ -783,7 +832,7 @@ final class TransactionManager {
     }()
 
     let paywallInfo: PaywallInfo
-    let eventSource: InternalSuperwallEvent.Transaction.Source
+    let eventSource: InternalSuperwallPlacement.Transaction.Source
     switch source {
     case .internal(_, let paywallViewController):
       paywallInfo = await paywallViewController.info
@@ -795,22 +844,22 @@ final class TransactionManager {
       eventSource = .external
     }
 
-    let trackedTransactionEvent = InternalSuperwallEvent.Transaction(
+    let trackedTransactionEvent = InternalSuperwallPlacement.Transaction(
       state: .complete(product, transaction, type),
       paywallInfo: paywallInfo,
       product: product,
       transaction: transaction,
       source: eventSource,
       isObserved: isObserved,
-      storeKitVersion: .storeKit1
+      storeKitVersion: purchaseManager.isUsingSK2 ? .storeKit2 : .storeKit1
     )
     await Superwall.shared.track(trackedTransactionEvent)
-    await eventsQueue.flushInternal()
+    await placementsQueue.flushInternal()
 
     switch type {
     case .nonRecurringProductPurchase:
       await Superwall.shared.track(
-        InternalSuperwallEvent.NonRecurringProductPurchase(
+        InternalSuperwallPlacement.NonRecurringProductPurchase(
           paywallInfo: paywallInfo,
           product: product,
           transaction: transaction
@@ -818,7 +867,7 @@ final class TransactionManager {
       )
     case .freeTrialStart:
       await Superwall.shared.track(
-        InternalSuperwallEvent.FreeTrialStart(
+        InternalSuperwallPlacement.FreeTrialStart(
           paywallInfo: paywallInfo,
           product: product,
           transaction: transaction
@@ -830,7 +879,7 @@ final class TransactionManager {
       await NotificationScheduler.scheduleNotifications(notifications, factory: factory)
     case .subscriptionStart:
       await Superwall.shared.track(
-        InternalSuperwallEvent.SubscriptionStart(
+        InternalSuperwallPlacement.SubscriptionStart(
           paywallInfo: paywallInfo,
           product: product,
           transaction: transaction

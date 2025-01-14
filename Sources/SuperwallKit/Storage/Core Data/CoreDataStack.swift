@@ -105,7 +105,7 @@ class CoreDataStack {
     }
   }
 
-  func getLastSavedEvent(
+  func getLastSavedPlacement(
     name: String,
     before date: Date?,
     completion: @escaping ((ManagedEventData?) -> Void)
@@ -126,16 +126,16 @@ class CoreDataStack {
 
       do {
         let results = try backgroundContext.fetch(fetchRequest)
-        guard let event = results.first else {
+        guard let placement = results.first else {
           return completion(nil)
         }
-        completion(event)
+        completion(placement)
       } catch {
         Logger.debug(
           logLevel: .error,
           scope: .coreData,
           message: "Error getting last saved event from Core Data.",
-          info: ["event": name],
+          info: ["placement": name],
           error: error
         )
         completion(nil)

@@ -1,13 +1,11 @@
 # Example Apps
 
-We have four example apps – Swift-UIKit with RevenueCat, Swift-UIKit (with StoreKit), SwiftUI, and Objective-C + UIKit. They all have the same functionality and each has an accompanying tutorial that gives an overview of the app.
+We have two example apps – Basic and Advanced. With the basic app, Superwall handles everything for you. Check out the Advanced app if you want to use entitlements, have more control over the purchasing/restore process, or want to use RevenueCat.
 
 Please select which app you'd like to use:
 
-- [Swift-UIKit with RevenueCat Example App](UIKit+RevenueCat)
-- [Swift-UIKit with StoreKit Example App](UIKit-Swift)
-- [SwiftUI Example App](SwiftUI)
-- [Objective-C-UIKit](UIKit+RevenueCat)
+- [Basic Example App](Basic)
+- [Advanced Example App](Advanced)
 
 ## Support
 

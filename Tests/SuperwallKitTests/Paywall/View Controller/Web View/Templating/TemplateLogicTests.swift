@@ -1,13 +1,14 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 18/01/2023.
 // swiftlint:disable all
 
-import XCTest
-@testable import SuperwallKit
 import StoreKit
+import XCTest
+
+@testable import SuperwallKit
 
 final class TemplateLogicTests: XCTestCase {
   class MockVariablesFactory: VariablesFactory {
@@ -25,11 +26,11 @@ final class TemplateLogicTests: XCTestCase {
     func makeJsonVariables(
       products productVariables: [ProductVariable]?,
       computedPropertyRequests: [ComputedPropertyRequest],
-      event: EventData?
+      placement: PlacementData?
     ) async -> JSON {
       return Variables(
         products: productVariables,
-        params: event?.parameters,
+        params: placement?.parameters,
         userAttributes: userAttributes,
         templateDeviceDictionary: deviceDict
       ).templated()
@@ -40,9 +41,10 @@ final class TemplateLogicTests: XCTestCase {
     // MARK: Given
     let dependencyContainer = DependencyContainer()
     let products = [
-      ProductItem(
+      Product(
         name: "primary",
-        type: .appStore(.init(id: "123"))
+        type: .appStore(.init(id: "123")),
+        entitlements: [.stub()]
       )
     ]
     let productVariables = [ProductVariable(name: "primary", attributes: ["period": "month"])]
@@ -63,9 +65,9 @@ final class TemplateLogicTests: XCTestCase {
     // Encode
     let encodedTemplates = await TemplateLogic.getBase64EncodedTemplates(
       from: .stub()
-        .setting(\.productItems, to: products)
+        .setting(\.products, to: products)
         .setting(\.productVariables, to: productVariables),
-      event: .stub()
+      placement: .stub()
         .setting(\.parameters, to: ["myparam": "test"]),
       receiptManager: dependencyContainer.receiptManager,
       factory: factory
@@ -83,15 +85,14 @@ final class TemplateLogicTests: XCTestCase {
     XCTAssertEqual(jsonArray[0]["products"].count, 1)
 
     XCTAssertEqual(jsonArray[1]["event_name"], "template_variables")
+    print(jsonArray[1]["variables"])
     XCTAssertFalse(jsonArray[1]["variables"]["device"]["isMac"].boolValue)
     XCTAssertEqual(jsonArray[1]["variables"]["params"]["myparam"], "test")
     XCTAssertEqual(jsonArray[1]["variables"]["user"]["name"], "Yusuf")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"]["isSubscribed"], false)
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"].count, 2)
-    XCTAssertTrue(jsonArray[1]["variables"]["secondary"].isEmpty)
-    XCTAssertTrue(jsonArray[1]["variables"]["tertiary"].isEmpty)
-
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"]["isSubscribed"], false)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"].count, 2)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"].count, 1)
 
     XCTAssertEqual(jsonArray[2]["event_name"], "template_substitutions_prefix")
     XCTAssertEqual(jsonArray[2].count, 1)
@@ -101,9 +102,10 @@ final class TemplateLogicTests: XCTestCase {
     // MARK: Given
     let dependencyContainer = DependencyContainer()
     let productItems = [
-      ProductItem(
+      Product(
         name: "primary",
-        type: .appStore(.init(id: "123"))
+        type: .appStore(.init(id: "123")),
+        entitlements: [.stub()]
       )
     ]
     let productVariables = [ProductVariable(name: "primary", attributes: ["period": "month"])]
@@ -125,10 +127,10 @@ final class TemplateLogicTests: XCTestCase {
     // Encode
     let encodedTemplates = await TemplateLogic.getBase64EncodedTemplates(
       from: .stub()
-        .setting(\.productItems, to: productItems)
+        .setting(\.products, to: productItems)
         .setting(\.productVariables, to: productVariables)
         .setting(\.isFreeTrialAvailable, to: true),
-      event: .stub()
+      placement: .stub()
         .setting(\.parameters, to: params),
       receiptManager: dependencyContainer.receiptManager,
       factory: factory
@@ -142,18 +144,17 @@ final class TemplateLogicTests: XCTestCase {
     // MARK: Then
     XCTAssertEqual(jsonArray[0]["event_name"], "products")
     XCTAssertEqual(jsonArray[0]["products"][0]["productId"].stringValue, productItems.first!.id)
-    XCTAssertEqual(jsonArray[0]["products"][0]["product"].stringValue, productItems.first!.name.description)
+    XCTAssertEqual(
+      jsonArray[0]["products"][0]["product"].stringValue, productItems.first!.name!.description)
     XCTAssertEqual(jsonArray[0]["products"].count, 1)
 
     XCTAssertEqual(jsonArray[1]["event_name"], "template_variables")
     XCTAssertFalse(jsonArray[1]["variables"]["device"]["isMac"].boolValue)
     XCTAssertEqual(jsonArray[1]["variables"]["params"]["myparam"], "test")
     XCTAssertEqual(jsonArray[1]["variables"]["user"]["name"], "Yusuf")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"].count, 2)
-    XCTAssertTrue(jsonArray[1]["variables"]["secondary"].isEmpty)
-    XCTAssertTrue(jsonArray[1]["variables"]["tertiary"].isEmpty)
-
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"].count, 2)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"].count, 1)
 
     XCTAssertEqual(jsonArray[2]["event_name"], "template_substitutions_prefix")
     XCTAssertEqual(jsonArray[2]["prefix"], "freeTrial")
@@ -163,23 +164,26 @@ final class TemplateLogicTests: XCTestCase {
     // MARK: Given
     let dependencyContainer = DependencyContainer()
     let products = [
-      ProductItem(
+      Product(
         name: "primary",
-        type: .appStore(.init(id: "123"))
+        type: .appStore(.init(id: "123")),
+        entitlements: [.stub()]
       ),
-      ProductItem(
+      Product(
         name: "secondary",
-        type: .appStore(.init(id: "456"))
+        type: .appStore(.init(id: "456")),
+        entitlements: [.stub()]
       ),
-      ProductItem(
+      Product(
         name: "tertiary",
-        type: .appStore(.init(id: "789"))
-      )
+        type: .appStore(.init(id: "789")),
+        entitlements: [.stub()]
+      ),
     ]
     let productVariables = [
       ProductVariable(name: "primary", attributes: ["period": "month"]),
       ProductVariable(name: "secondary", attributes: ["period": "month"]),
-      ProductVariable(name: "tertiary", attributes: ["period": "month"])
+      ProductVariable(name: "tertiary", attributes: ["period": "month"]),
     ]
     let userAttributes = [
       "name": "Yusuf"
@@ -199,10 +203,10 @@ final class TemplateLogicTests: XCTestCase {
     // Encode
     let encodedTemplates = await TemplateLogic.getBase64EncodedTemplates(
       from: .stub()
-        .setting(\.productItems, to: products)
+        .setting(\.products, to: products)
         .setting(\.productVariables, to: productVariables)
         .setting(\.isFreeTrialAvailable, to: true),
-      event: .stub()
+      placement: .stub()
         .setting(\.parameters, to: params),
       receiptManager: dependencyContainer.receiptManager,
       factory: factory
@@ -227,39 +231,44 @@ final class TemplateLogicTests: XCTestCase {
     XCTAssertFalse(jsonArray[1]["variables"]["device"]["isMac"].boolValue)
     XCTAssertEqual(jsonArray[1]["variables"]["params"]["myparam"], "test")
     XCTAssertEqual(jsonArray[1]["variables"]["user"]["name"], "Yusuf")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"].count, 2)
-    XCTAssertEqual(jsonArray[1]["variables"]["secondary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["secondary"].count, 2)
-    XCTAssertEqual(jsonArray[1]["variables"]["tertiary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["tertiary"].count, 2)
-
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"].count, 2)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][1]["secondary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][1]["secondary"].count, 2)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][2]["tertiary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][2]["tertiary"].count, 2)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"].count, 3)
 
     XCTAssertEqual(jsonArray[2]["event_name"], "template_substitutions_prefix")
     XCTAssertEqual(jsonArray[2]["prefix"], "freeTrial")
   }
 
-  func test_getBase64EncodedTemplates_threeProducts_freeTrial_userAttributes_variablesTemplate() async {
+  func test_getBase64EncodedTemplates_threeProducts_freeTrial_userAttributes_variablesTemplate()
+    async
+  {
     // MARK: Given
     let dependencyContainer = DependencyContainer()
     let products = [
-      ProductItem(
+      Product(
         name: "primary",
-        type: .appStore(.init(id: "123"))
+        type: .appStore(.init(id: "123")),
+        entitlements: [.stub()]
       ),
-      ProductItem(
+      Product(
         name: "secondary",
-        type: .appStore(.init(id: "456"))
+        type: .appStore(.init(id: "456")),
+        entitlements: [.stub()]
       ),
-      ProductItem(
+      Product(
         name: "tertiary",
-        type: .appStore(.init(id: "789"))
-      )
+        type: .appStore(.init(id: "789")),
+        entitlements: [.stub()]
+      ),
     ]
     let productVariables = [
       ProductVariable(name: "primary", attributes: ["period": "month"]),
       ProductVariable(name: "secondary", attributes: ["period": "month"]),
-      ProductVariable(name: "tertiary", attributes: ["period": "month"])
+      ProductVariable(name: "tertiary", attributes: ["period": "month"]),
     ]
     let userAttributes = [
       "name": "Yusuf"
@@ -279,10 +288,10 @@ final class TemplateLogicTests: XCTestCase {
     // Encode
     let encodedTemplates = await TemplateLogic.getBase64EncodedTemplates(
       from: .stub()
-        .setting(\.productItems, to: products)
+        .setting(\.products, to: products)
         .setting(\.productVariables, to: productVariables)
         .setting(\.isFreeTrialAvailable, to: true),
-      event: .stub()
+      placement: .stub()
         .setting(\.parameters, to: params),
       receiptManager: dependencyContainer.receiptManager,
       factory: factory
@@ -307,13 +316,12 @@ final class TemplateLogicTests: XCTestCase {
     XCTAssertFalse(jsonArray[1]["variables"]["device"]["isMac"].boolValue)
     XCTAssertEqual(jsonArray[1]["variables"]["params"]["myparam"], "test")
     XCTAssertEqual(jsonArray[1]["variables"]["user"]["name"], "Yusuf")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["primary"].count, 2)
-    XCTAssertEqual(jsonArray[1]["variables"]["secondary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["secondary"].count, 2)
-    XCTAssertEqual(jsonArray[1]["variables"]["tertiary"]["period"], "month")
-    XCTAssertEqual(jsonArray[1]["variables"]["tertiary"].count, 2)
-
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][0]["primary"].count, 2)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][1]["secondary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][1]["secondary"].count, 2)
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][2]["tertiary"]["period"], "month")
+    XCTAssertEqual(jsonArray[1]["variables"]["products"][2]["tertiary"].count, 2)
 
     XCTAssertEqual(jsonArray[2]["event_name"], "template_substitutions_prefix")
     XCTAssertEqual(jsonArray[2]["prefix"], "freeTrial")

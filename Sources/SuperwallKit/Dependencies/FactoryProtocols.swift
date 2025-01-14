@@ -1,14 +1,14 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 03/01/2023.
 //
 
-import UIKit
 import Combine
-import SystemConfiguration
 import StoreKit
+import SystemConfiguration
+import UIKit
 
 protocol ViewControllerFactory: AnyObject {
   @MainActor
@@ -35,18 +35,17 @@ protocol VariablesFactory: AnyObject {
   func makeJsonVariables(
     products: [ProductVariable]?,
     computedPropertyRequests: [ComputedPropertyRequest],
-    event: EventData?
+    placement: PlacementData?
   ) async -> JSON
 }
 
 protocol RequestFactory: AnyObject {
   func makePaywallRequest(
-    eventData: EventData?,
+    placementData: PlacementData?,
     responseIdentifiers: ResponseIdentifiers,
     overrides: PaywallRequest.Overrides?,
     isDebuggerLaunched: Bool,
-    presentationSourceType: String?,
-    retryCount: Int
+    presentationSourceType: String?
   ) -> PaywallRequest
 
   func makePresentationRequest(
@@ -54,17 +53,16 @@ protocol RequestFactory: AnyObject {
     paywallOverrides: PaywallOverrides?,
     presenter: UIViewController?,
     isDebuggerLaunched: Bool?,
-    subscriptionStatus: AnyPublisher<SubscriptionStatus, Never>?,
     isPaywallPresented: Bool,
     type: PresentationRequestType
   ) -> PresentationRequest
 }
 
-protocol RuleAttributesFactory: AnyObject {
-  func makeRuleAttributes(
-    forEvent event: EventData?,
+protocol AudienceFilterAttributesFactory: AnyObject {
+  func makeAudienceFilterAttributes(
+    forPlacement placement: PlacementData?,
     withComputedProperties computedPropertyRequests: [ComputedPropertyRequest]
-  ) async -> JSON
+  ) async -> [String: Any]
 }
 
 protocol FeatureFlagsFactory: AnyObject {
@@ -84,6 +82,10 @@ protocol ConfigManagerFactory: AnyObject {
 
 protocol IdentityInfoFactory: AnyObject {
   func makeIdentityInfo() async -> IdentityInfo
+}
+
+protocol TransactionManagerFactory: AnyObject {
+  func makeTransactionManager() -> TransactionManager
 }
 
 protocol LocaleIdentifierFactory: AnyObject {
@@ -140,22 +142,20 @@ protocol TriggerFactory: AnyObject {
 
 protocol PurchasedTransactionsFactory {
   func makePurchasingCoordinator() -> PurchasingCoordinator
-  func purchase(
-    product: SKProduct
-  ) async -> PurchaseResult
+  func purchase(product: StoreProduct) async -> PurchaseResult
   func restorePurchases() async -> RestorationResult
 }
 
-protocol UserAttributesEventFactory {
-  func makeUserAttributesEvent() -> InternalSuperwallEvent.Attributes
+protocol UserAttributesPlacementFactory {
+  func makeUserAttributesPlacement() -> InternalSuperwallPlacement.Attributes
 }
 
 protocol ReceiptFactory {
-  func loadPurchasedProducts() async -> Set<StoreProduct>?
-  func refreshReceipt() async
+  func loadPurchasedProducts() async
+  func refreshSK1Receipt() async
   func isFreeTrialAvailable(for product: StoreProduct) async -> Bool
 }
 
 protocol ConfigAttributesFactory {
-  func makeConfigAttributes() -> InternalSuperwallEvent.ConfigAttributes
+  func makeConfigAttributes() -> InternalSuperwallPlacement.ConfigAttributes
 }

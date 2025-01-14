@@ -14,21 +14,22 @@ extension Superwall {
   /// it from showing later on.
   ///
   /// - Parameters:
-  ///   - rulesOutput: The output from evaluating rules.
+  ///   - request: The presentation request.
+  ///   - audienceOutcome: The output from evaluating audience filters.
   ///   - dependencyContainer: Used for testing only.
   func confirmHoldoutAssignment(
     request: PresentationRequest,
-    from rulesOutcome: RuleEvaluationOutcome,
+    from audienceOutcome: AudienceFilterEvaluationOutcome,
     dependencyContainer: DependencyContainer? = nil
   ) {
     guard request.flags.type.shouldConfirmAssignments else {
       return
     }
     let dependencyContainer = dependencyContainer ?? self.dependencyContainer
-    guard case .holdout = rulesOutcome.triggerResult else {
+    guard case .holdout = audienceOutcome.triggerResult else {
       return
     }
-    if let confirmableAssignment = rulesOutcome.confirmableAssignment {
+    if let confirmableAssignment = audienceOutcome.confirmableAssignment {
       dependencyContainer.configManager.confirmAssignment(confirmableAssignment)
     }
   }

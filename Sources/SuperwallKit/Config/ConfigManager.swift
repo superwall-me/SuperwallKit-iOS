@@ -1,13 +1,13 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 22/06/2022.
 //
 // swiftlint:disable type_body_length function_body_length file_length
 
-import UIKit
 import Combine
+import UIKit
 
 class ConfigManager {
   /// A publisher that emits just once only when `config` is non-`nil`.
@@ -29,9 +29,9 @@ class ConfigManager {
   /// Options for configuring the SDK.
   var options: SuperwallOptions
 
-  /// A dictionary of triggers by their event name.
+  /// A dictionary of triggers by their placement name.
   @DispatchQueueBacked
-  var triggersByEventName: [String: Trigger] = [:]
+  var triggersByPlacementName: [String: Trigger] = [:]
 
   /// A memory store of assignments that are yet to be confirmed.
   ///
@@ -46,12 +46,14 @@ class ConfigManager {
   private unowned let network: Network
   private unowned let paywallManager: PaywallManager
   private unowned let deviceHelper: DeviceHelper
+  private unowned let entitlementsInfo: EntitlementsInfo
+  let expressionEvaluator: CELEvaluator
 
   /// A task that is non-`nil` when preloading all paywalls.
   private var currentPreloadingTask: Task<Void, Never>?
 
   typealias Factory = RequestFactory
-    & RuleAttributesFactory
+    & AudienceFilterAttributesFactory
     & ReceiptFactory
     & DeviceHelperFactory
   private let factory: Factory
@@ -63,6 +65,7 @@ class ConfigManager {
     network: Network,
     paywallManager: PaywallManager,
     deviceHelper: DeviceHelper,
+    entitlementsInfo: EntitlementsInfo,
     factory: Factory
   ) {
     self.options = options
@@ -71,7 +74,12 @@ class ConfigManager {
     self.network = network
     self.paywallManager = paywallManager
     self.deviceHelper = deviceHelper
+    self.entitlementsInfo = entitlementsInfo
     self.factory = factory
+    self.expressionEvaluator = CELEvaluator(
+      storage: self.storage,
+      factory: self.factory
+    )
   }
 
   /// This refreshes config, requiring paywalls to reload and removing unused paywall view controllers.
@@ -104,7 +112,7 @@ class ConfigManager {
       await processConfig(newConfig, isFirstTime: false)
       configState.send(.retrieved(newConfig))
 
-      let configRefresh = InternalSuperwallEvent.ConfigRefresh(
+      let configRefresh = InternalSuperwallPlacement.ConfigRefresh(
         buildId: newConfig.buildId,
         retryCount: configRetryCount,
         cacheStatus: .notCached,
@@ -125,8 +133,6 @@ class ConfigManager {
 
   func fetchConfiguration() async {
     do {
-      _ = await factory.loadPurchasedProducts()
-
       let startAt = Date()
 
       // Retrieve cached config and determine if refresh is enabled
@@ -190,9 +196,10 @@ class ConfigManager {
       let configFetchDuration = Date().timeIntervalSince(startAt)
       let isUsingCachedGeoInfo = await isUsingCachedGeo
 
-      let cacheStatus: InternalSuperwallEvent.ConfigCacheStatus = isUsingCachedConfig ? .cached : .notCached
+      let cacheStatus: InternalSuperwallPlacement.ConfigCacheStatus =
+        isUsingCachedConfig ? .cached : .notCached
       Task {
-        let configRefresh = InternalSuperwallEvent.ConfigRefresh(
+        let configRefresh = InternalSuperwallPlacement.ConfigRefresh(
           buildId: config.buildId,
           retryCount: configRetryCount,
           cacheStatus: cacheStatus,
@@ -203,7 +210,7 @@ class ConfigManager {
 
       let deviceAttributes = await factory.makeSessionDeviceAttributes()
       await Superwall.shared.track(
-        InternalSuperwallEvent.DeviceAttributes(deviceAttributes: deviceAttributes)
+        InternalSuperwallPlacement.DeviceAttributes(deviceAttributes: deviceAttributes)
       )
 
       await processConfig(config, isFirstTime: true)
@@ -226,7 +233,7 @@ class ConfigManager {
     } catch {
       configState.send(completion: .failure(error))
 
-      let configFallback = InternalSuperwallEvent.ConfigFail(
+      let configFallback = InternalSuperwallPlacement.ConfigFail(
         message: error.localizedDescription
       )
       await Superwall.shared.track(configFallback)
@@ -274,10 +281,18 @@ class ConfigManager {
     _ config: Config,
     isFirstTime: Bool
   ) async {
-    storage.save(config.featureFlags.disableVerboseEvents, forType: DisableVerboseEvents.self)
+    storage.save(
+      config.featureFlags.disableVerbosePlacements, forType: DisableVerbosePlacements.self)
     storage.save(config, forType: LatestConfig.self)
-    triggersByEventName = ConfigLogic.getTriggersByEventName(from: config.triggers)
+    triggersByPlacementName = ConfigLogic.getTriggersByPlacementName(from: config.triggers)
     choosePaywallVariants(from: config.triggers)
+
+    let entitlementsByProductId = ConfigLogic.extractEntitlements(from: config)
+    entitlementsInfo.setEntitlementsFromConfig(entitlementsByProductId)
+
+    // Load the products after entitlementsInfo is set because we need to map
+    // purchased products to entitlements.
+    await factory.loadPurchasedProducts()
     if isFirstTime {
       await checkForTouchesBeganTrigger(in: config.triggers)
     }
@@ -296,7 +311,7 @@ class ConfigManager {
   /// Swizzles the UIWindow's `sendEvent` to intercept the first `began` touch event if
   /// config's triggers contain `touches_began`.
   private func checkForTouchesBeganTrigger(in triggers: Set<Trigger>) async {
-    if triggers.contains(where: { $0.eventName == SuperwallEvent.touchesBegan.description }) {
+    if triggers.contains(where: { $0.placementName == SuperwallPlacement.touchesBegan.description }) {
       await UIWindow.swizzleSendEvent()
     }
   }
@@ -314,7 +329,8 @@ class ConfigManager {
 
   /// Gets the assignments from the server and saves them to disk, overwriting any that already exist on disk/in memory.
   func getAssignments() async throws {
-    let config = try await configState
+    let config =
+      try await configState
       .compactMap { $0.getConfig() }
       .throwableAsync()
 
@@ -417,15 +433,13 @@ class ConfigManager {
       // Wait until the previous task is finished before continuing.
       await currentPreloadingTask?.value
 
-      guard let config = try? await self.configState
-        .compactMap({ $0.getConfig() })
-        .throwableAsync() else {
+      guard
+        let config = try? await self.configState
+          .compactMap({ $0.getConfig() })
+          .throwableAsync()
+      else {
         return
       }
-      let expressionEvaluator = ExpressionEvaluator(
-        storage: self.storage,
-        factory: self.factory
-      )
       let triggers = ConfigLogic.filterTriggers(
         config.triggers,
         removing: config.preloadingDisabled
@@ -447,13 +461,16 @@ class ConfigManager {
   }
 
   /// Preloads paywalls referenced by the provided triggers.
-  func preloadPaywalls(for eventNames: Set<String>) async {
-    guard let config = try? await configState
-      .compactMap({ $0.getConfig() })
-      .throwableAsync() else {
-        return
-      }
-    let triggersToPreload = config.triggers.filter { eventNames.contains($0.eventName) }
+  func preloadPaywalls(for placementNames: Set<String>) async {
+    guard
+      let config =
+        try? await configState
+        .compactMap({ $0.getConfig() })
+        .throwableAsync()
+    else {
+      return
+    }
+    let triggersToPreload = config.triggers.filter { placementNames.contains($0.placementName) }
     let triggerPaywallIdentifiers = getTreatmentPaywallIds(from: triggersToPreload)
     await preloadPaywalls(
       withIdentifiers: triggerPaywallIdentifiers
@@ -469,12 +486,11 @@ class ConfigManager {
             return
           }
           let request = self.factory.makePaywallRequest(
-            eventData: nil,
+            placementData: nil,
             responseIdentifiers: .init(paywallId: identifier),
             overrides: nil,
             isDebuggerLaunched: false,
-            presentationSourceType: nil,
-            retryCount: 6
+            presentationSourceType: nil
           )
           guard let paywall = try? await self.paywallManager.getPaywall(from: request) else {
             return

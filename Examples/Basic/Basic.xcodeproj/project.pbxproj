@@ -1,0 +1,471 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		884D9822291151510013225F /* SuperwallKit in Frameworks */ = {isa = PBXBuildFile; productRef = 884D9821291151510013225F /* SuperwallKit */; };
+		887111582D0B027E00D737A4 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887111572D0B027E00D737A4 /* Colors.swift */; };
+		888F488827DA6B0F009C74A3 /* SuperwallBasicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888F488727DA6B0F009C74A3 /* SuperwallBasicApp.swift */; };
+		888F488C27DA6B10009C74A3 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 888F488B27DA6B10009C74A3 /* Images.xcassets */; };
+		888F488F27DA6B10009C74A3 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 888F488E27DA6B10009C74A3 /* Preview Assets.xcassets */; };
+		888F48C327DB8584009C74A3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888F48C227DB8584009C74A3 /* HomeView.swift */; };
+		888F48C827DBA47E009C74A3 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 888F48C727DBA47E009C74A3 /* Colors.xcassets */; };
+		888F48CB27DBA55E009C74A3 /* BrandedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888F48CA27DBA55E009C74A3 /* BrandedButton.swift */; };
+		888F48D127DBA62D009C74A3 /* Font.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888F48D027DBA62D009C74A3 /* Font.swift */; };
+		888F48D327DBA662009C74A3 /* Styles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888F48D227DBA662009C74A3 /* Styles.swift */; };
+		888F48D727DBA6B6009C74A3 /* Rubik-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 888F48D627DBA6B6009C74A3 /* Rubik-Regular.ttf */; };
+		888F48DB27DBA8A9009C74A3 /* Rubik-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 888F48DA27DBA8A9009C74A3 /* Rubik-Bold.ttf */; };
+		88A801D028EAE717004244CA /* SuperwallSubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A801CF28EAE717004244CA /* SuperwallSubscriptionView.swift */; };
+		88EE539627DF6D0A00F1FFFB /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88EE539527DF6D0A00F1FFFB /* WelcomeView.swift */; };
+		88F9F1E327E21718004FCE83 /* InfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F9F1E227E21718004FCE83 /* InfoView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		887111572D0B027E00D737A4 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		888F488427DA6B0F009C74A3 /* Superwall-SwiftUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Superwall-SwiftUI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		888F488727DA6B0F009C74A3 /* SuperwallBasicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuperwallBasicApp.swift; sourceTree = "<group>"; };
+		888F488B27DA6B10009C74A3 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		888F488E27DA6B10009C74A3 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		888F48BE27DA7352009C74A3 /* paywall-ios */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "paywall-ios"; path = ../..; sourceTree = "<group>"; };
+		888F48C227DB8584009C74A3 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		888F48C727DBA47E009C74A3 /* Colors.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Colors.xcassets; sourceTree = "<group>"; };
+		888F48CA27DBA55E009C74A3 /* BrandedButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandedButton.swift; sourceTree = "<group>"; };
+		888F48CD27DBA5BA009C74A3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		888F48D027DBA62D009C74A3 /* Font.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Font.swift; sourceTree = "<group>"; };
+		888F48D227DBA662009C74A3 /* Styles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Styles.swift; sourceTree = "<group>"; };
+		888F48D627DBA6B6009C74A3 /* Rubik-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rubik-Regular.ttf"; sourceTree = "<group>"; };
+		888F48DA27DBA8A9009C74A3 /* Rubik-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rubik-Bold.ttf"; sourceTree = "<group>"; };
+		88A801CF28EAE717004244CA /* SuperwallSubscriptionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SuperwallSubscriptionView.swift; sourceTree = "<group>"; };
+		88EE539127DF64BB00F1FFFB /* Superwall_Basic-Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Superwall_Basic-Products.storekit"; sourceTree = "<group>"; };
+		88EE539527DF6D0A00F1FFFB /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		88F9F1E227E21718004FCE83 /* InfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		888F488127DA6B0F009C74A3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				884D9822291151510013225F /* SuperwallKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		888F487B27DA6B0F009C74A3 = {
+			isa = PBXGroup;
+			children = (
+				888F48BE27DA7352009C74A3 /* paywall-ios */,
+				888F488627DA6B0F009C74A3 /* Basic */,
+				888F488527DA6B0F009C74A3 /* Products */,
+				888F48B727DA6F7F009C74A3 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		888F488527DA6B0F009C74A3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				888F488427DA6B0F009C74A3 /* Superwall-SwiftUI.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		888F488627DA6B0F009C74A3 /* Basic */ = {
+			isa = PBXGroup;
+			children = (
+				888F48C627DBA46B009C74A3 /* Design */,
+				888F48C927DBA54A009C74A3 /* Components */,
+				888F48CD27DBA5BA009C74A3 /* Info.plist */,
+				88EE539127DF64BB00F1FFFB /* Superwall_Basic-Products.storekit */,
+				888F488727DA6B0F009C74A3 /* SuperwallBasicApp.swift */,
+				88EE539527DF6D0A00F1FFFB /* WelcomeView.swift */,
+				888F48C227DB8584009C74A3 /* HomeView.swift */,
+			);
+			path = Basic;
+			sourceTree = "<group>";
+		};
+		888F48B727DA6F7F009C74A3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		888F48C627DBA46B009C74A3 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				888F48D427DBA67E009C74A3 /* Assets */,
+				888F48D527DBA69D009C74A3 /* Fonts */,
+				888F48D227DBA662009C74A3 /* Styles.swift */,
+				887111572D0B027E00D737A4 /* Colors.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		888F48C927DBA54A009C74A3 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				888F48CA27DBA55E009C74A3 /* BrandedButton.swift */,
+				88F9F1E227E21718004FCE83 /* InfoView.swift */,
+				88A801CF28EAE717004244CA /* SuperwallSubscriptionView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		888F48D427DBA67E009C74A3 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				888F488E27DA6B10009C74A3 /* Preview Assets.xcassets */,
+				888F48C727DBA47E009C74A3 /* Colors.xcassets */,
+				888F488B27DA6B10009C74A3 /* Images.xcassets */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
+		888F48D527DBA69D009C74A3 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				888F48D027DBA62D009C74A3 /* Font.swift */,
+				888F48D627DBA6B6009C74A3 /* Rubik-Regular.ttf */,
+				888F48DA27DBA8A9009C74A3 /* Rubik-Bold.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		888F488327DA6B0F009C74A3 /* Superwall-SwiftUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 888F48A827DA6B10009C74A3 /* Build configuration list for PBXNativeTarget "Superwall-SwiftUI" */;
+			buildPhases = (
+				888F48BF27DB8422009C74A3 /* SwiftLint */,
+				888F488027DA6B0F009C74A3 /* Sources */,
+				888F488127DA6B0F009C74A3 /* Frameworks */,
+				888F488227DA6B0F009C74A3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Superwall-SwiftUI";
+			packageProductDependencies = (
+				884D9821291151510013225F /* SuperwallKit */,
+			);
+			productName = SuperwallSwiftUIExample;
+			productReference = 888F488427DA6B0F009C74A3 /* Superwall-SwiftUI.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		888F487C27DA6B0F009C74A3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1320;
+				LastUpgradeCheck = 1320;
+				TargetAttributes = {
+					888F488327DA6B0F009C74A3 = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+				};
+			};
+			buildConfigurationList = 888F487F27DA6B0F009C74A3 /* Build configuration list for PBXProject "Basic" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 888F487B27DA6B0F009C74A3;
+			productRefGroup = 888F488527DA6B0F009C74A3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				888F488327DA6B0F009C74A3 /* Superwall-SwiftUI */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		888F488227DA6B0F009C74A3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				888F48C827DBA47E009C74A3 /* Colors.xcassets in Resources */,
+				888F48D727DBA6B6009C74A3 /* Rubik-Regular.ttf in Resources */,
+				888F488F27DA6B10009C74A3 /* Preview Assets.xcassets in Resources */,
+				888F488C27DA6B10009C74A3 /* Images.xcassets in Resources */,
+				888F48DB27DBA8A9009C74A3 /* Rubik-Bold.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		888F48BF27DB8422009C74A3 /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "../../scripts/lint.sh\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		888F488027DA6B0F009C74A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				888F48D327DBA662009C74A3 /* Styles.swift in Sources */,
+				887111582D0B027E00D737A4 /* Colors.swift in Sources */,
+				888F48CB27DBA55E009C74A3 /* BrandedButton.swift in Sources */,
+				88A801D028EAE717004244CA /* SuperwallSubscriptionView.swift in Sources */,
+				888F48C327DB8584009C74A3 /* HomeView.swift in Sources */,
+				88EE539627DF6D0A00F1FFFB /* WelcomeView.swift in Sources */,
+				888F48D127DBA62D009C74A3 /* Font.swift in Sources */,
+				88F9F1E327E21718004FCE83 /* InfoView.swift in Sources */,
+				888F488827DA6B0F009C74A3 /* SuperwallBasicApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		888F48A627DA6B10009C74A3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		888F48A727DA6B10009C74A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		888F48A927DA6B10009C74A3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Basic/Design/Assets\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Basic/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Superwall (Basic)";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.superwall.Basic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Debug;
+		};
+		888F48AA27DA6B10009C74A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Basic/Design/Assets\"";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Basic/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Superwall (Basic)";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.superwall.Basic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		888F487F27DA6B0F009C74A3 /* Build configuration list for PBXProject "Basic" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				888F48A627DA6B10009C74A3 /* Debug */,
+				888F48A727DA6B10009C74A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		888F48A827DA6B10009C74A3 /* Build configuration list for PBXNativeTarget "Superwall-SwiftUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				888F48A927DA6B10009C74A3 /* Debug */,
+				888F48AA27DA6B10009C74A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		884D9821291151510013225F /* SuperwallKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SuperwallKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 888F487C27DA6B0F009C74A3 /* Project object */;
+}

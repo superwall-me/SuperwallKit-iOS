@@ -1,0 +1,71 @@
+name: TagVersion
+
+on:
+  push:
+    branches: [ v4 ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2        
+    - name: Tag
+      run: | 
+          sudo git config --global user.name 'Jake'
+          sudo git config --global user.email 'jakemor@users.noreply.github.com'
+          sudo git pull
+          echo "\n\n\n- - - - - VERSION - - - - -\n\n\n"
+          sed -n 21p ./Sources/SuperwallKit/Misc/Constants.swift
+          echo "\n\n\n- - - - - END VERSION - - - - -\n\n\n"
+          sudo git tag -a $(sed -n 21p ./Sources/SuperwallKit/Misc/Constants.swift) -m "tags with latest version"
+          sudo git push --tags || true
+          sudo git checkout -b release/$(sed -n 21p ./Sources/SuperwallKit/Misc/Constants.swift)
+          sudo git push -u origin release/$(sed -n 21p ./Sources/SuperwallKit/Misc/Constants.swift)
+
+  cocoapods:
+    needs: tag
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Publish to CocoaPod register
+      env:
+        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+      run: |
+        pod trunk push SuperwallKit.podspec --allow-warnings
+
+  slack:
+    runs-on: ubuntu-latest
+    needs: tag
+    steps:
+    - uses: actions/checkout@v3
+    - name: Parse version
+      id: version
+      run: |
+        VERSION=$(sed -n 21p ./Sources/SuperwallKit/Misc/Constants.swift)
+        echo "VERSION=$VERSION"
+        echo "::set-output name=prop::$VERSION"
+    - name: Determine prerelease status
+      id: prerelease
+      run: |
+        VERSION=${{steps.version.outputs.prop}}
+        if [[ "$VERSION" == *"-alpha"* || "$VERSION" == *"-beta"* || "$VERSION" == *"-rc"* ]]; then
+          echo "::set-output name=status::true"
+        else
+          echo "::set-output name=status::false"
+        fi
+
+    - name: slack-send
+      uses: slackapi/slack-github-action@v1.24.0
+      with:
+        payload: |
+          {
+            "text": "Please create a new iOS Release! https://github.com/superwall-me/Superwall-iOS/releases/new?tag=${{steps.version.outputs.prop}}&prerelease=${{steps.prerelease.outputs.status}}"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  

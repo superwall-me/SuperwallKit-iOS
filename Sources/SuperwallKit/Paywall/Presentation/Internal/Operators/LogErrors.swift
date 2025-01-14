@@ -13,7 +13,7 @@ extension Superwall {
     _ error: Error
   ) {
     if let reason = error as? PresentationPipelineError,
-      case .subscriptionStatusTimeout = reason {
+      case .entitlementsTimeout = reason {
       // Don't print anything if we've just cancelled a pipeline that timed out.
       return
     }
@@ -22,14 +22,14 @@ extension Superwall {
         return
       }
       if let reason = error as? PresentationPipelineError {
-        let trackedEvent = InternalSuperwallEvent.PresentationRequest(
-          eventData: request.presentationInfo.eventData,
+        let presentationRequest = InternalSuperwallPlacement.PresentationRequest(
+          placementData: request.presentationInfo.placementData,
           type: request.flags.type,
           status: .noPresentation,
           statusReason: reason,
           factory: self.dependencyContainer
         )
-        await self.track(trackedEvent)
+        await self.track(presentationRequest)
       }
     }
     Logger.debug(

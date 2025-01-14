@@ -1,14 +1,15 @@
 {
+  "originHash" : "db362fdf36eaf1c479870b40c7a6c2e2165345c7210ebe36257ee38523125878",
   "pins" : [
     {
-      "identity" : "asn1swift",
+      "identity" : "superscript-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/tikhop/ASN1Swift",
+      "location" : "https://github.com/superwall/Superscript-iOS",
       "state" : {
-        "revision" : "b53bee03a942623db25afc5bfb80227b2cb3b425",
-        "version" : "1.2.4"
+        "revision" : "a917ad513e171e658a73f9ae7329f3cffa42f173",
+        "version" : "0.1.16"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

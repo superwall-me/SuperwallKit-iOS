@@ -422,7 +422,22 @@ let response = #"""
         "store_product": {
           "store": "APP_STORE",
           "product_identifier": "sk.superwall.annual.89.99_7"
-        }
+        },
+        "entitlements": [
+          {
+            "identifier": "test",
+            "type": "SERVICE_LEVEL"
+          }
+        ]
+      },
+      {
+        "store_product": {
+          "store":"PLAY_STORE",
+          "product_identifier":"com.ui_tests.quarterly2",
+          "base_plan_identifier":"test-2",
+          "offer":{"type":"AUTOMATIC"}
+        },
+        "entitlements":[]
       },
       {
         "reference_name": "primary",
@@ -464,7 +479,45 @@ let response = #"""
   "disable_preload": {
     "all": false,
     "triggers": []
-  }
+  },
+  "products": [
+    {
+      "store_product": {
+        "store": "APP_STORE",
+        "product_identifier": "com.ui_tests.monthly"
+      },
+      "entitlements": [
+        {
+          "identifier": "default",
+          "type": "SERVICE_LEVEL"
+        }
+      ]
+    },
+    {
+      "store_product": {
+        "store": "APP_STORE",
+        "product_identifier": "com.ui_tests.annual"
+      },
+      "entitlements": [
+        {
+          "identifier": "default",
+          "type": "SERVICE_LEVEL"
+        }
+      ]
+    },
+    {
+      "store_product": {
+        "store": "APP_STORE",
+        "product_identifier": "incorrect_product_identifier"
+      },
+      "entitlements": [
+        {
+          "identifier": "default",
+          "type": "SERVICE_LEVEL"
+        }
+      ]
+    }
+  ]
 }
 """#
 
@@ -474,15 +527,14 @@ final class ConfigTypeTests: XCTestCase {
       Config.self,
       from: response.data(using: .utf8)!
     )
-    XCTAssertTrue(parsedResponse.featureFlags.enableSessionEvents)
 
-    XCTAssertTrue(parsedResponse.paywalls.first!.productItems.count != 0)
-    guard let trigger = parsedResponse.triggers.filter({ $0.eventName == "MyEvent" }).first
+    XCTAssertTrue(parsedResponse.paywalls.first!.products.count != 0)
+    guard let trigger = parsedResponse.triggers.filter({ $0.placementName == "MyEvent" }).first
     else {
       return XCTFail("opened_application trigger not found")
     }
 
-    let firstRule = trigger.rules[0]
+    let firstRule = trigger.audiences[0]
     XCTAssertNil(firstRule.expression)
     XCTAssertEqual(firstRule.experiment.id, "80")
 

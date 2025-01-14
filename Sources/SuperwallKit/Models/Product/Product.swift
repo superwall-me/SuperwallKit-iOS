@@ -74,24 +74,3 @@ extension ProductType: CustomStringConvertible {
     }
   }
 }
-
-/// The product in the paywall.
-@objc(SWKProduct)
-@objcMembers
-public final class Product: NSObject, Codable, Sendable {
-  /// The type of product.
-  public let type: ProductType
-
-  /// The product identifier.
-  public let id: String
-
-  enum CodingKeys: String, CodingKey {
-    case type = "product"
-    case id = "productId"
-  }
-
-  init(type: ProductType, id: String) {
-    self.type = type
-    self.id = id
-  }
-}

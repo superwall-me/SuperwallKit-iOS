@@ -17,23 +17,17 @@ extension Superwall {
         } else {
           return PaywallSkippedReason.holdout(experiment)
         }
-      case .noRuleMatch:
+      case .noAudienceMatch:
         if toObjc {
-          return PaywallSkippedReasonObjc.noRuleMatch
+          return PaywallSkippedReasonObjc.noAudienceMatch
         } else {
-          return PaywallSkippedReason.noRuleMatch
+          return PaywallSkippedReason.noAudienceMatch
         }
-      case .eventNotFound:
+      case .placementNotFound:
         if toObjc {
-          return PaywallSkippedReasonObjc.eventNotFound
+          return PaywallSkippedReasonObjc.placementNotFound
         } else {
-          return PaywallSkippedReason.eventNotFound
-        }
-      case .userIsSubscribed:
-        if toObjc {
-          return PaywallSkippedReasonObjc.userIsSubscribed
-        } else {
-          return PaywallSkippedReason.userIsSubscribed
+          return PaywallSkippedReason.placementNotFound
         }
       default:
         return error

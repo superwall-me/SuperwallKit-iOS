@@ -21,7 +21,7 @@ extension Superwall {
     _ request: PresentationRequest,
     _ publisher: PassthroughSubject<PaywallState, Never>? = nil
   ) async throws -> PaywallComponents {
-    try await waitForSubsStatusAndConfig(request, paywallStatePublisher: publisher)
+    try await waitForEntitlementsAndConfig(request, paywallStatePublisher: publisher)
 
     let debugInfo = log(request: request)
 
@@ -30,22 +30,16 @@ extension Superwall {
       paywallStatePublisher: publisher
     )
 
-    let rulesOutcome = try await evaluateRules(from: request)
-
-    try await checkUserSubscription(
-      request: request,
-      triggerResult: rulesOutcome.triggerResult,
-      paywallStatePublisher: publisher
-    )
+    let audienceOutcome = try await evaluateAudienceFilter(from: request)
 
     confirmHoldoutAssignment(
       request: request,
-      from: rulesOutcome
+      from: audienceOutcome
     )
 
     let paywallViewController = try await getPaywallViewController(
       request: request,
-      rulesOutcome: rulesOutcome,
+      audienceOutcome: audienceOutcome,
       debugInfo: debugInfo,
       paywallStatePublisher: publisher,
       dependencyContainer: dependencyContainer
@@ -53,14 +47,14 @@ extension Superwall {
 
     let presenter = try await getPresenterIfNecessary(
       for: paywallViewController,
-      rulesOutcome: rulesOutcome,
+      audienceOutcome: audienceOutcome,
       request: request,
       debugInfo: debugInfo,
       paywallStatePublisher: publisher
     )
 
     confirmPaywallAssignment(
-      rulesOutcome.confirmableAssignment,
+      audienceOutcome.confirmableAssignment,
       request: request,
       isDebuggerLaunched: request.flags.isDebuggerLaunched
     )
@@ -68,7 +62,7 @@ extension Superwall {
     return PaywallComponents(
       viewController: paywallViewController,
       presenter: presenter,
-      rulesOutcome: rulesOutcome,
+      audienceOutcome: audienceOutcome,
       debugInfo: debugInfo
     )
   }
@@ -77,9 +71,9 @@ extension Superwall {
     _ request: PresentationRequest
   ) async -> ConfirmedAssignment? {
     do {
-      try await waitForSubsStatusAndConfig(request, paywallStatePublisher: nil)
+      try await waitForEntitlementsAndConfig(request, paywallStatePublisher: nil)
 
-      let rulesOutcome = try await evaluateRules(from: request)
+      let rulesOutcome = try await evaluateAudienceFilter(from: request)
 
       confirmHoldoutAssignment(
         request: request,

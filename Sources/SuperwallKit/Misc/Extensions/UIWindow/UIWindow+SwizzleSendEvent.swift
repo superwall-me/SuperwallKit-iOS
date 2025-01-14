@@ -38,8 +38,8 @@ extension UIWindow {
         return
       }
       Task {
-        let event = InternalSuperwallEvent.TouchesBegan()
-        await Superwall.shared.track(event)
+        let touchesBegan = InternalSuperwallPlacement.TouchesBegan()
+        await Superwall.shared.track(touchesBegan)
       }
 
       // Call the original implementation of sendEvent after tracking touchesBegan.

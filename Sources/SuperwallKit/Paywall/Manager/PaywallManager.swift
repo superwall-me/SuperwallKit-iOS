@@ -83,17 +83,7 @@ class PaywallManager {
     await paywallArchiveManager.preloadArchive(paywall: paywall)
   }
 
-  /// First, this gets the paywall response for a specified paywall identifier or trigger event.
-  /// It then creates the paywall view controller from that response, and caches it.
-  ///
-  /// If no `identifier` or `event` is specified, this gets the default paywall for the user.
-  ///
-  /// - Parameters:
-  ///   - request: The request to get the paywall.
-  ///   - isForPresentation: Indicates whether the paywall will be
-  ///   presented.
-  ///   - isPreloading: Whether or not the paywall is being preloaded.
-  ///   - delegate: The delegate for the `PaywallViewController`.
+  /// Gets the paywall view controller for a given paywall.
   @MainActor
   func getViewController(
     for paywall: Paywall,

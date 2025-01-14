@@ -12,15 +12,18 @@ import StoreKit
 final class ProductsFetcherSK1Mock: ProductsFetcherSK1 {
   let productCompletionResult: Result<Set<StoreProduct>, Error>
 
-  init(productCompletionResult: Result<Set<StoreProduct>, Error>) {
+  init(
+    productCompletionResult: Result<Set<StoreProduct>, Error>,
+    entitlementsInfo: EntitlementsInfo
+  ) {
     self.productCompletionResult = productCompletionResult
-    super.init()
+    super.init(entitlementsInfo: entitlementsInfo)
   }
 
   override func products(
     identifiers: Set<String>,
     forPaywall paywall: Paywall?,
-    event: EventData?
+    placement: PlacementData?
   ) async throws -> Set<StoreProduct> {
     return try productCompletionResult.get()
   }

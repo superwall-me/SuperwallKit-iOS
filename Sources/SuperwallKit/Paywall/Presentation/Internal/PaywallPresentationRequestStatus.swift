@@ -15,7 +15,7 @@ public enum PaywallPresentationRequestStatus: String {
   /// The request won't result in a paywall presentation.
   case noPresentation = "no_presentation"
 
-  /// There was a timeout when trying to get the user's subscription status, identity
+  /// There was a timeout when trying to get the user's entitlements, identity
   /// or configuration from the server.
   case timeout
 }
@@ -28,17 +28,14 @@ public enum PaywallPresentationRequestStatusReason: Error, CustomStringConvertib
   /// There's already a paywall presented.
   case paywallAlreadyPresented
 
-  /// The user is subscribed.
-  case userIsSubscribed
-
   /// The user is in a holdout group.
   case holdout(Experiment)
 
-  /// No rules defined in the campaign for the event matched.
-  case noRuleMatch
+  /// No audiences defined in the campaign for the placement matched.
+  case noAudienceMatch
 
-  /// The event provided was not found in any campaign on the dashboard.
-  case eventNotFound
+  /// The placement provided was not found in any campaign on the dashboard.
+  case placementNotFound
 
   /// There was an error getting the paywall view controller.
   case noPaywallViewController
@@ -49,11 +46,11 @@ public enum PaywallPresentationRequestStatusReason: Error, CustomStringConvertib
   /// The config hasn't been retrieved from the server in time.
   case noConfig
 
-  /// The subscription status timed out.
+  /// The entitlements timed out.
   ///
-  /// This happens when the ``Superwall/subscriptionStatus``
-  /// stays ``SubscriptionStatus/unknown`` for more than 5 seconds.
-  case subscriptionStatusTimeout
+  /// This happens when the ``Superwall/entitlements``
+  /// haven't been set within 5 seconds.
+  case entitlementsTimeout
 
   public var description: String {
     switch self {
@@ -61,13 +58,11 @@ public enum PaywallPresentationRequestStatusReason: Error, CustomStringConvertib
       return "debugger_presented"
     case .paywallAlreadyPresented:
       return "paywall_already_presented"
-    case .userIsSubscribed:
-      return "user_is_subscribed"
     case .holdout:
       return "holdout"
-    case .noRuleMatch:
+    case .noAudienceMatch:
       return "no_rule_match"
-    case .eventNotFound:
+    case .placementNotFound:
       return "event_not_found"
     case .noPaywallViewController:
       return "no_paywall_view_controller"
@@ -75,8 +70,8 @@ public enum PaywallPresentationRequestStatusReason: Error, CustomStringConvertib
       return "no_presenter"
     case .noConfig:
       return "no_config"
-    case .subscriptionStatusTimeout:
-      return "subscription_status_timeout"
+    case .entitlementsTimeout:
+      return "entitlements_timeout"
     }
   }
 }

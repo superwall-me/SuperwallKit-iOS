@@ -9,7 +9,6 @@
 import UIKit
 import Combine
 import SystemConfiguration
-import StoreKit
 
 /// Contains all of the SDK's core utility objects that are normally directly injected as dependencies.
 ///
@@ -24,43 +23,53 @@ final class DependencyContainer {
   var identityManager: IdentityManager!
   var storeKitManager: StoreKitManager!
   var appSessionManager: AppSessionManager!
-  var sessionEventsManager: SessionEventsManager!
   var storage: Storage!
   var network: Network!
   var paywallManager: PaywallManager!
   var paywallRequestManager: PaywallRequestManager!
   var deviceHelper: DeviceHelper!
-  var eventsQueue: EventsQueue!
+  var placementsQueue: PlacementsQueue!
   var debugManager: DebugManager!
   var api: Api!
   var transactionManager: TransactionManager!
   var delegateAdapter: SuperwallDelegateAdapter!
-  var productPurchaser: ProductPurchaserSK1!
+  var purchaseManager: PurchaseManager!
   var receiptManager: ReceiptManager!
   var purchaseController: PurchaseController!
+  var productsManager: ProductsManager!
+  var entitlementsInfo: EntitlementsInfo!
   var attributionPoster: AttributionPoster!
-  var celEvaluator: CELEvaluator!
   // swiftlint:enable implicitly_unwrapped_optional
-  let productsFetcher = ProductsFetcherSK1()
   let paywallArchiveManager = PaywallArchiveManager()
 
   init(
     purchaseController controller: PurchaseController? = nil,
     options: SuperwallOptions? = nil
   ) {
-    purchaseController = controller ?? AutomaticPurchaseController(factory: self)
-    receiptManager = ReceiptManager(
-      delegate: productsFetcher,
-      receiptDelegate: purchaseController as? ReceiptDelegate
-    )
-    storeKitManager = StoreKitManager(productsFetcher: productsFetcher)
     delegateAdapter = SuperwallDelegateAdapter()
     storage = Storage(factory: self)
-    celEvaluator = CELEvaluator(storage: storage, factory: self)
+    entitlementsInfo = EntitlementsInfo(
+      storage: storage,
+      delegateAdapter: delegateAdapter
+    )
     let options = options ?? SuperwallOptions()
+    productsManager = ProductsManager(
+      entitlementsInfo: entitlementsInfo,
+      storeKitVersion: options.storeKitVersion
+    )
     network = Network(
       options: options,
       factory: self
+    )
+
+    storeKitManager = StoreKitManager(productsManager: productsManager)
+
+    purchaseController = controller ?? AutomaticPurchaseController(factory: self, entitlementsInfo: entitlementsInfo)
+
+    receiptManager = ReceiptManager(
+      storeKitVersion: options.storeKitVersion,
+      productsManager: productsManager,
+      receiptDelegate: purchaseController as? ReceiptDelegate
     )
 
     paywallRequestManager = PaywallRequestManager(
@@ -79,6 +88,8 @@ final class DependencyContainer {
       api: api,
       storage: storage,
       network: network,
+      entitlementsInfo: entitlementsInfo,
+      receiptManager: receiptManager,
       factory: self
     )
 
@@ -89,6 +100,7 @@ final class DependencyContainer {
       network: network,
       paywallManager: paywallManager,
       deviceHelper: deviceHelper,
+      entitlementsInfo: entitlementsInfo,
       factory: self
     )
 
@@ -98,7 +110,7 @@ final class DependencyContainer {
       configManager: configManager
     )
 
-    eventsQueue = EventsQueue(
+    placementsQueue = PlacementsQueue(
       network: network,
       configManager: configManager
     )
@@ -106,17 +118,6 @@ final class DependencyContainer {
     identityManager = IdentityManager(
       deviceHelper: deviceHelper,
       storage: storage,
-      configManager: configManager
-    )
-
-    sessionEventsManager = SessionEventsManager(
-      queue: SessionEventsQueue(
-        storage: storage,
-        network: network,
-        configManager: configManager
-      ),
-      storage: storage,
-      network: network,
       configManager: configManager
     )
 
@@ -133,23 +134,22 @@ final class DependencyContainer {
       factory: self
     )
 
+    purchaseManager = PurchaseManager(
+      storeKitVersion: options.storeKitVersion,
+      storeKitManager: storeKitManager,
+      receiptManager: receiptManager,
+      identityManager: identityManager,
+      storage: storage,
+      factory: self
+    )
+
     transactionManager = TransactionManager(
       storeKitManager: storeKitManager,
       receiptManager: receiptManager,
       purchaseController: purchaseController,
-      sessionEventsManager: sessionEventsManager,
-      eventsQueue: eventsQueue,
-      productsFetcher: productsFetcher,
-      factory: self
-    )
-
-    productPurchaser = ProductPurchaserSK1(
-      storeKitManager: storeKitManager,
-      receiptManager: receiptManager,
-      sessionEventsManager: sessionEventsManager,
-      identityManager: identityManager,
-      storage: storage,
-      transactionManager: transactionManager,
+      placementsQueue: placementsQueue,
+      purchaseManager: purchaseManager,
+      productsManager: productsManager,
       factory: self
     )
   }
@@ -162,6 +162,12 @@ extension DependencyContainer: IdentityInfoFactory {
       aliasId: identityManager.aliasId,
       appUserId: identityManager.appUserId
     )
+  }
+}
+
+extension DependencyContainer: TransactionManagerFactory {
+  func makeTransactionManager() -> TransactionManager {
+    return transactionManager
   }
 }
 
@@ -224,7 +230,6 @@ extension DependencyContainer: ViewControllerFactory {
     delegate: PaywallViewControllerDelegateAdapter?
   ) -> PaywallViewController {
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: sessionEventsManager,
       receiptManager: receiptManager,
       factory: self
     )
@@ -272,16 +277,16 @@ extension DependencyContainer: VariablesFactory {
   func makeJsonVariables(
     products: [ProductVariable]?,
     computedPropertyRequests: [ComputedPropertyRequest],
-    event: EventData?
+    placement: PlacementData?
   ) async -> JSON {
     let templateDeviceDict = await deviceHelper.getDeviceAttributes(
-      since: event,
+      since: placement,
       computedPropertyRequests: computedPropertyRequests
     )
 
     return Variables(
       products: products,
-      params: event?.parameters,
+      params: placement?.parameters,
       userAttributes: identityManager.userAttributes,
       templateDeviceDictionary: templateDeviceDict
     ).templated()
@@ -291,20 +296,19 @@ extension DependencyContainer: VariablesFactory {
 // MARK: - PaywallRequestFactory
 extension DependencyContainer: RequestFactory {
   func makePaywallRequest(
-    eventData: EventData? = nil,
+    placementData: PlacementData? = nil,
     responseIdentifiers: ResponseIdentifiers,
     overrides: PaywallRequest.Overrides? = nil,
     isDebuggerLaunched: Bool,
-    presentationSourceType: String?,
-    retryCount: Int
+    presentationSourceType: String?
   ) -> PaywallRequest {
     return PaywallRequest(
-      eventData: eventData,
+      placementData: placementData,
       responseIdentifiers: responseIdentifiers,
       overrides: overrides ?? PaywallRequest.Overrides(),
       isDebuggerLaunched: isDebuggerLaunched,
       presentationSourceType: presentationSourceType,
-      retryCount: retryCount
+      retryCount: 6
     )
   }
 
@@ -313,7 +317,6 @@ extension DependencyContainer: RequestFactory {
     paywallOverrides: PaywallOverrides? = nil,
     presenter: UIViewController? = nil,
     isDebuggerLaunched: Bool? = nil,
-    subscriptionStatus: AnyPublisher<SubscriptionStatus, Never>? = nil,
     isPaywallPresented: Bool,
     type: PresentationRequestType
   ) -> PresentationRequest {
@@ -323,7 +326,7 @@ extension DependencyContainer: RequestFactory {
       paywallOverrides: paywallOverrides,
       flags: .init(
         isDebuggerLaunched: isDebuggerLaunched ?? debugManager.isDebuggerLaunched,
-        subscriptionStatus: subscriptionStatus ?? Superwall.shared.$subscriptionStatus.eraseToAnyPublisher(),
+        entitlementStatus: entitlementsInfo.$status.eraseToAnyPublisher(),
         isPaywallPresented: isPaywallPresented,
         type: type
       )
@@ -365,10 +368,10 @@ extension DependencyContainer: ApiFactory {
       "X-Bundle-ID": deviceHelper.bundleId,
       "X-Low-Power-Mode": deviceHelper.isLowPowerModeEnabled,
       "X-Is-Sandbox": deviceHelper.isSandbox,
-      "X-Subscription-Status": Superwall.shared.subscriptionStatus.description,
       "X-Static-Config-Build-Id": configManager.config?.buildId ?? "",
       "X-Current-Time": Date().isoString,
       "X-Retry-Count": "\(configManager.configRetryCount)",
+      "X-Entitlements": Superwall.shared.entitlements.active.map { $0.id }.joined(),
       "Content-Type": "application/json"
     ]
     return headers
@@ -379,24 +382,24 @@ extension DependencyContainer: ApiFactory {
   }
 }
 
-// MARK: - Rule Params
-extension DependencyContainer: RuleAttributesFactory {
-  func makeRuleAttributes(
-    forEvent event: EventData?,
+// MARK: - Audience Filter Params
+extension DependencyContainer: AudienceFilterAttributesFactory {
+  func makeAudienceFilterAttributes(
+    forPlacement placement: PlacementData?,
     withComputedProperties computedPropertyRequests: [ComputedPropertyRequest]
-  ) async -> JSON {
+  ) async -> [String: Any] {
     var userAttributes = identityManager.userAttributes
     userAttributes["isLoggedIn"] = identityManager.isLoggedIn
 
     let deviceAttributes = await deviceHelper.getDeviceAttributes(
-      since: event,
+      since: placement,
       computedPropertyRequests: computedPropertyRequests
     )
-    return JSON([
+    return [
       "user": userAttributes,
       "device": deviceAttributes,
-      "params": event?.parameters.dictionaryObject ?? ""
-    ] as [String: Any])
+      "params": placement?.parameters.dictionaryObject ?? ""
+    ]
   }
 }
 
@@ -449,7 +452,7 @@ extension DependencyContainer: OptionsFactory {
 // MARK: - Triggers Factory
 extension DependencyContainer: TriggerFactory {
   func makeTriggers() -> Set<String> {
-    return Set(configManager.triggersByEventName.keys)
+    return Set(configManager.triggersByPlacementName.keys)
   }
 }
 
@@ -477,26 +480,22 @@ extension DependencyContainer: ComputedPropertyRequestsFactory {
 // MARK: - Purchased Transactions Factory
 extension DependencyContainer: PurchasedTransactionsFactory {
   func makePurchasingCoordinator() -> PurchasingCoordinator {
-    return productPurchaser.coordinator
+    return purchaseManager.coordinator
   }
 
-  func purchase(
-    product: SKProduct
-  ) async -> PurchaseResult {
-    return await productPurchaser.purchase(
-      product: product
-    )
+  func purchase(product: StoreProduct) async -> PurchaseResult {
+    return await purchaseManager.purchase(product: product)
   }
 
   func restorePurchases() async -> RestorationResult {
-    return await productPurchaser.restorePurchases()
+    return await purchaseManager.restorePurchases()
   }
 }
 
-// MARK: - User Attributes Event Factory
-extension DependencyContainer: UserAttributesEventFactory {
-  func makeUserAttributesEvent() -> InternalSuperwallEvent.Attributes {
-    return InternalSuperwallEvent.Attributes(
+// MARK: - User Attributes Placement Factory
+extension DependencyContainer: UserAttributesPlacementFactory {
+  func makeUserAttributesPlacement() -> InternalSuperwallPlacement.Attributes {
+    return InternalSuperwallPlacement.Attributes(
       appInstalledAtString: deviceHelper.appInstalledAtString,
       audienceFilterParams: identityManager.userAttributes
     )
@@ -505,12 +504,12 @@ extension DependencyContainer: UserAttributesEventFactory {
 
 // MARK: - Receipt Factory
 extension DependencyContainer: ReceiptFactory {
-  func loadPurchasedProducts() async -> Set<StoreProduct>? {
-    return await receiptManager.loadPurchasedProducts()
+  func loadPurchasedProducts() async {
+    await receiptManager.loadPurchasedProducts()
   }
 
-  func refreshReceipt() async {
-    return await receiptManager.refreshReceipt()
+  func refreshSK1Receipt() async {
+    return await receiptManager.refreshSK1Receipt()
   }
 
   func isFreeTrialAvailable(for product: StoreProduct) async -> Bool {
@@ -520,11 +519,11 @@ extension DependencyContainer: ReceiptFactory {
 
 // MARK: - Config Attributes Factory
 extension DependencyContainer: ConfigAttributesFactory {
-  func makeConfigAttributes() -> InternalSuperwallEvent.ConfigAttributes {
+  func makeConfigAttributes() -> InternalSuperwallPlacement.ConfigAttributes {
     let hasSwiftDelegate = delegateAdapter.swiftDelegate != nil
     let hasObjcDelegate = delegateAdapter.objcDelegate != nil
 
-    return InternalSuperwallEvent.ConfigAttributes(
+    return InternalSuperwallPlacement.ConfigAttributes(
       options: configManager.options,
       hasExternalPurchaseController: purchaseController.isInternal == false,
       hasDelegate: hasSwiftDelegate || hasObjcDelegate

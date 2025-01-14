@@ -15,8 +15,8 @@ final class ConfigLogicTests: XCTestCase {
     do {
       let _ = try ConfigLogic.chooseVariant(from: [])
       XCTFail("Should have produced an error")
-    } catch let error as ConfigLogic.TriggerRuleError {
-      XCTAssertEqual(error, ConfigLogic.TriggerRuleError.noVariantsFound)
+    } catch let error as ConfigLogic.TriggerAudienceError {
+      XCTAssertEqual(error, ConfigLogic.TriggerAudienceError.noVariantsFound)
     } catch {
       XCTFail("Should have produced a no variant error")
     }
@@ -29,9 +29,9 @@ final class ConfigLogicTests: XCTestCase {
         .setting(\.percentage, to: 0)
       ]
       let variant = try ConfigLogic.chooseVariant(from: options)
-      XCTAssertEqual(options.first!.toVariant(), variant)
-    } catch let error as ConfigLogic.TriggerRuleError {
-      XCTAssertEqual(error, ConfigLogic.TriggerRuleError.invalidState)
+      XCTAssertEqual(options.first!.toExperimentVariant(), variant)
+    } catch let error as ConfigLogic.TriggerAudienceError {
+      XCTAssertEqual(error, ConfigLogic.TriggerAudienceError.invalidState)
     } catch {
       XCTFail("Should have produced a no variant error")
     }
@@ -68,7 +68,7 @@ final class ConfigLogicTests: XCTestCase {
         .setting(\.percentage, to: 0)
       ]
       let variant = try ConfigLogic.chooseVariant(from: options)
-      XCTAssertEqual(options.first!.toVariant(), variant)
+      XCTAssertEqual(options.first!.toExperimentVariant(), variant)
     } catch {
       XCTFail("Should have produced a no variant error")
     }
@@ -91,7 +91,7 @@ final class ConfigLogicTests: XCTestCase {
           return 98
         }
       )
-      XCTAssertEqual(options.last!.toVariant(), variant)
+      XCTAssertEqual(options.last!.toExperimentVariant(), variant)
     } catch {
       XCTFail("Should have produced a no variant error")
     }
@@ -114,7 +114,7 @@ final class ConfigLogicTests: XCTestCase {
           return 65
         }
       )
-      XCTAssertEqual(options[1].toVariant(), variant)
+      XCTAssertEqual(options[1].toExperimentVariant(), variant)
     } catch {
       XCTFail("Should have produced a no variant error")
     }
@@ -137,7 +137,7 @@ final class ConfigLogicTests: XCTestCase {
           return 0
         }
       )
-      XCTAssertEqual(options.first!.toVariant(), variant)
+      XCTAssertEqual(options.first!.toExperimentVariant(), variant)
     } catch {
       XCTFail("Should have produced a no variant error")
     }
@@ -146,40 +146,40 @@ final class ConfigLogicTests: XCTestCase {
   // MARK: - getRulesPerTriggerGroup
 
   func test_getRulesPerTriggerGroup_noTriggers() {
-    let rules = ConfigLogic.getRulesPerCampaign(from: [])
+    let rules = ConfigLogic.getAudienceFiltersPerCampaign(from: [])
     XCTAssertTrue(rules.isEmpty)
   }
 
   func test_getRulesPerTriggerGroup_noRules() {
-    let rules = ConfigLogic.getRulesPerCampaign(from: [
+    let rules = ConfigLogic.getAudienceFiltersPerCampaign(from: [
       .stub()
-      .setting(\.rules, to: [])
+      .setting(\.audiences, to: [])
     ])
     XCTAssertTrue(rules.isEmpty)
   }
 
   func test_getRulesPerTriggerGroup_threeTriggersTwoWithSameGroupId() {
     let trigger1 = Trigger.stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(\.experiment.groupId, to: "1")
       ])
     let trigger2 = Trigger.stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(\.experiment.groupId, to: "1")
       ])
     let trigger3 = Trigger.stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(\.experiment.groupId, to: "2")
       ])
-    let rules = ConfigLogic.getRulesPerCampaign(from: [
+    let rules = ConfigLogic.getAudienceFiltersPerCampaign(from: [
       trigger1, trigger2, trigger3
     ])
     XCTAssertEqual(rules.count, 2)
-    XCTAssertTrue(rules.contains(trigger3.rules))
-    XCTAssertTrue(rules.contains(trigger1.rules))
+    XCTAssertTrue(rules.contains(trigger3.audiences))
+    XCTAssertTrue(rules.contains(trigger1.audiences))
   }
 
   // MARK: - Choose Variants
@@ -219,7 +219,7 @@ final class ConfigLogicTests: XCTestCase {
             return 0
           }
         )
-        XCTAssertEqual(options.first!.toVariant(), variant)
+        XCTAssertEqual(options.first!.toExperimentVariant(), variant)
       } catch {
         XCTFail("Should have produced a no variant error")
       }
@@ -238,7 +238,7 @@ final class ConfigLogicTests: XCTestCase {
     let variant = ConfigLogic.chooseAssignments(
       fromTriggers: [
         .stub()
-        .setting(\.rules, to: [])
+        .setting(\.audiences, to: [])
       ],
       confirmedAssignments: confirmedAssignments
     )
@@ -263,7 +263,7 @@ final class ConfigLogicTests: XCTestCase {
     let variant = ConfigLogic.chooseAssignments(
       fromTriggers: [
         .stub()
-        .setting(\.rules, to: [
+        .setting(\.audiences, to: [
           .stub()
           .setting(\.experiment, to: .stub()
             .setting(\.id, to: experimentId)
@@ -279,7 +279,7 @@ final class ConfigLogicTests: XCTestCase {
 
     // When
     XCTAssertEqual(variant.unconfirmed.count, 1)
-    XCTAssertEqual(variant.unconfirmed[experimentId], variantOption.toVariant())
+    XCTAssertEqual(variant.unconfirmed[experimentId], variantOption.toExperimentVariant())
     XCTAssertTrue(variant.confirmed.isEmpty)
   }
 
@@ -298,7 +298,7 @@ final class ConfigLogicTests: XCTestCase {
     let variant = ConfigLogic.chooseAssignments(
       fromTriggers: [
         .stub()
-        .setting(\.rules, to: [
+        .setting(\.audiences, to: [
           .stub()
           .setting(\.experiment, to: .stub()
             .setting(\.id, to: experimentId)
@@ -309,12 +309,12 @@ final class ConfigLogicTests: XCTestCase {
           )
         ])
       ],
-      confirmedAssignments: [experimentId: variantOption.toVariant()]
+      confirmedAssignments: [experimentId: variantOption.toExperimentVariant()]
     )
 
     // Then
     XCTAssertEqual(variant.confirmed.count, 1)
-    XCTAssertEqual(variant.confirmed[experimentId], variantOption.toVariant())
+    XCTAssertEqual(variant.confirmed[experimentId], variantOption.toExperimentVariant())
     XCTAssertTrue(variant.unconfirmed.isEmpty)
   }
 
@@ -336,7 +336,7 @@ final class ConfigLogicTests: XCTestCase {
     let variant = ConfigLogic.chooseAssignments(
       fromTriggers: [
         .stub()
-        .setting(\.rules, to: [
+        .setting(\.audiences, to: [
           .stub()
           .setting(\.experiment, to: .stub()
             .setting(\.id, to: experimentId)
@@ -347,12 +347,12 @@ final class ConfigLogicTests: XCTestCase {
           )
         ])
       ],
-      confirmedAssignments: [experimentId: oldVariantOption.toVariant()]
+      confirmedAssignments: [experimentId: oldVariantOption.toExperimentVariant()]
     )
 
     // Then
     XCTAssertEqual(variant.unconfirmed.count, 1)
-    XCTAssertEqual(variant.unconfirmed[experimentId], newVariantOption.toVariant())
+    XCTAssertEqual(variant.unconfirmed[experimentId], newVariantOption.toExperimentVariant())
     XCTAssertTrue(variant.confirmed.isEmpty)
   }
 
@@ -370,7 +370,7 @@ final class ConfigLogicTests: XCTestCase {
     let variant = ConfigLogic.chooseAssignments(
       fromTriggers: [
         .stub()
-        .setting(\.rules, to: [
+        .setting(\.audiences, to: [
           .stub()
           .setting(\.experiment, to: .stub()
             .setting(\.id, to: experimentId)
@@ -379,7 +379,7 @@ final class ConfigLogicTests: XCTestCase {
           )
         ])
       ],
-      confirmedAssignments: [experimentId: oldVariantOption.toVariant()]
+      confirmedAssignments: [experimentId: oldVariantOption.toExperimentVariant()]
     )
 
     // Then
@@ -417,7 +417,7 @@ final class ConfigLogicTests: XCTestCase {
       .setting(\.id, to: variantId)
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -432,11 +432,11 @@ final class ConfigLogicTests: XCTestCase {
     let result = ConfigLogic.transferAssignmentsFromServerToDisk(
       assignments: assignments,
       triggers: triggers,
-      confirmedAssignments: [experimentId: oldVariantOption.toVariant()],
+      confirmedAssignments: [experimentId: oldVariantOption.toExperimentVariant()],
       unconfirmedAssignments: ["jkl": .init(id: "mno", type: .treatment, paywallId: "pqr")]
     )
 
-    XCTAssertEqual(result.confirmed[experimentId], variantOption.toVariant())
+    XCTAssertEqual(result.confirmed[experimentId], variantOption.toExperimentVariant())
     XCTAssertEqual(result.unconfirmed["jkl"], unconfirmedVariant)
   }
 
@@ -468,7 +468,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -494,8 +494,8 @@ final class ConfigLogicTests: XCTestCase {
       unconfirmedAssignments: ["jkl": .init(id: "mno", type: .treatment, paywallId: "pqr")]
     )
     XCTAssertEqual(result.confirmed.count, 2)
-    XCTAssertEqual(result.confirmed[experimentId1], variantOption1.toVariant())
-    XCTAssertEqual(result.confirmed[experimentId2], variantOption2.toVariant())
+    XCTAssertEqual(result.confirmed[experimentId1], variantOption1.toExperimentVariant())
+    XCTAssertEqual(result.confirmed[experimentId2], variantOption2.toExperimentVariant())
     XCTAssertEqual(result.unconfirmed["jkl"], unconfirmedVariant)
   }
 
@@ -598,7 +598,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -612,7 +612,7 @@ final class ConfigLogicTests: XCTestCase {
       experiment1: .init(id: paywallId1, type: .treatment, paywallId: paywallId1)
     ]
 
-    let evaluator = ExpressionEvaluatorMock(outcome: .match(rule: .stub()))
+    let evaluator = ExpressionEvaluatorMock(outcome: .match(audience: .stub()))
 
     let ids = await ConfigLogic.getAllActiveTreatmentPaywallIds(
       fromTriggers: triggers,
@@ -629,7 +629,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -643,7 +643,7 @@ final class ConfigLogicTests: XCTestCase {
       experiment1: .init(id: paywallId1, type: .treatment, paywallId: paywallId1)
     ]
 
-    let evaluator = ExpressionEvaluatorMock(outcome: .match(rule: .stub()))
+    let evaluator = ExpressionEvaluatorMock(outcome: .match(audience: .stub()))
 
     let ids = await ConfigLogic.getAllActiveTreatmentPaywallIds(
       fromTriggers: triggers,
@@ -660,7 +660,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -691,7 +691,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -722,7 +722,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -731,7 +731,7 @@ final class ConfigLogicTests: XCTestCase {
         )
       ]),
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -743,7 +743,7 @@ final class ConfigLogicTests: XCTestCase {
     let confirmedAssignments: [Experiment.ID: Experiment.Variant] = [
       experiment1: .init(id: paywallId1, type: .treatment, paywallId: paywallId1)
     ]
-    let evaluator = ExpressionEvaluatorMock(outcome: .match(rule: .stub()))
+    let evaluator = ExpressionEvaluatorMock(outcome: .match(audience: .stub()))
 
     let ids = await ConfigLogic.getAllActiveTreatmentPaywallIds(
       fromTriggers: triggers,
@@ -759,7 +759,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -771,7 +771,7 @@ final class ConfigLogicTests: XCTestCase {
     let confirmedAssignments: [Experiment.ID: Experiment.Variant] = [
       experiment1: .init(id: "variantId1", type: .holdout, paywallId: nil)
     ]
-    let evaluator = ExpressionEvaluatorMock(outcome: .match(rule: .stub()))
+    let evaluator = ExpressionEvaluatorMock(outcome: .match(audience: .stub()))
 
     let ids = await ConfigLogic.getAllActiveTreatmentPaywallIds(
       fromTriggers: triggers,
@@ -790,7 +790,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -803,7 +803,7 @@ final class ConfigLogicTests: XCTestCase {
       experiment1: .init(id: "variantId1", type: .treatment, paywallId: paywallId1),
       experiment2: .init(id: "variantId2", type: .treatment, paywallId: paywallId2)
     ]
-    let evaluator = ExpressionEvaluatorMock(outcome: .match(rule: .stub()))
+    let evaluator = ExpressionEvaluatorMock(outcome: .match(audience: .stub()))
 
     let ids = await ConfigLogic.getAllActiveTreatmentPaywallIds(
       fromTriggers: triggers,
@@ -824,7 +824,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -834,7 +834,7 @@ final class ConfigLogicTests: XCTestCase {
         )
       ]),
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -848,7 +848,7 @@ final class ConfigLogicTests: XCTestCase {
       experiment1: .init(id: "variantId1", type: .treatment, paywallId: paywallId1),
       experiment2: .init(id: "variantId2", type: .treatment, paywallId: paywallId2)
     ]
-    let evaluator = ExpressionEvaluatorMock(outcome: .match(rule: .stub()))
+    let evaluator = ExpressionEvaluatorMock(outcome: .match(audience: .stub()))
 
     let ids = await ConfigLogic.getAllActiveTreatmentPaywallIds(
       fromTriggers: triggers,
@@ -868,7 +868,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -897,7 +897,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -926,7 +926,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -957,7 +957,7 @@ final class ConfigLogicTests: XCTestCase {
 
     let triggers: Set<Trigger> = [
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -967,7 +967,7 @@ final class ConfigLogicTests: XCTestCase {
         )
       ]),
       .stub()
-      .setting(\.rules, to: [
+      .setting(\.audiences, to: [
         .stub()
         .setting(
           \.experiment,
@@ -993,15 +993,15 @@ final class ConfigLogicTests: XCTestCase {
 
   func test_getTriggerDictionary() {
     let firstTrigger: Trigger = .stub()
-      .setting(\.eventName, to: "abc")
+      .setting(\.placementName, to: "abc")
     
     let secondTrigger: Trigger = .stub()
-      .setting(\.eventName, to: "def")
+      .setting(\.placementName, to: "def")
     
     let triggers: Set<Trigger> = [
       firstTrigger, secondTrigger
     ]
-    let dictionary = ConfigLogic.getTriggersByEventName(from: triggers)
+    let dictionary = ConfigLogic.getTriggersByPlacementName(from: triggers)
     XCTAssertEqual(dictionary["abc"], firstTrigger)
     XCTAssertEqual(dictionary["def"], secondTrigger)
   }
@@ -1025,8 +1025,8 @@ final class ConfigLogicTests: XCTestCase {
       triggers: []
     )
     let triggers: Set<Trigger > = [
-      Trigger(eventName: "app_open", rules: []),
-      Trigger(eventName: "campaign_trigger", rules: [.stub()])
+      Trigger(placementName: "app_open", audiences: []),
+      Trigger(placementName: "campaign_trigger", audiences: [.stub()])
     ]
     let filteredTriggers = ConfigLogic.filterTriggers(
       triggers,
@@ -1041,15 +1041,15 @@ final class ConfigLogicTests: XCTestCase {
       triggers: ["app_open"]
     )
     let triggers: Set<Trigger > = [
-      Trigger(eventName: "app_open", rules: []),
-      Trigger(eventName: "campaign_trigger", rules: [.stub()])
+      Trigger(placementName: "app_open", audiences: []),
+      Trigger(placementName: "campaign_trigger", audiences: [.stub()])
     ]
     let filteredTriggers = ConfigLogic.filterTriggers(
       triggers,
       removing: disabled
     )
     XCTAssertEqual(filteredTriggers.count, 1)
-    XCTAssertEqual(filteredTriggers.first!.eventName, "campaign_trigger")
+    XCTAssertEqual(filteredTriggers.first!.placementName, "campaign_trigger")
   }
 
   func test_filterTriggers_disableNone() {
@@ -1058,8 +1058,8 @@ final class ConfigLogicTests: XCTestCase {
       triggers: []
     )
     let triggers: Set<Trigger > = [
-      Trigger(eventName: "app_open", rules: []),
-      Trigger(eventName: "campaign_trigger", rules: [.stub()])
+      Trigger(placementName: "app_open", audiences: []),
+      Trigger(placementName: "campaign_trigger", audiences: [.stub()])
     ]
     let filteredTriggers = ConfigLogic.filterTriggers(
       triggers,
@@ -1133,5 +1133,33 @@ final class ConfigLogicTests: XCTestCase {
     )
 
     XCTAssertEqual(result, Set([oldPaywall.identifier, removedPaywall.identifier]))
+  }
+
+  // MARK: - extractEntitlements
+
+  func test_extractEntitlements_noEntitlements() {
+    let productId = "123"
+    let entitlement = Entitlement.stub()
+    let config = Config(
+      buildId: "poWduJZYQbCA8QbWLrjJC",
+      triggers: [.stub()],
+      paywalls: [.stub()],
+      logLevel: 0,
+      locales: [],
+      appSessionTimeout: 3600000,
+      featureFlags: .stub(),
+      preloadingDisabled: .stub(),
+      attribution: .init(appleSearchAds: .init(enabled: true)),
+      products: [
+        .init(
+          name: "test",
+          type: .appStore(.init(id: productId)),
+          entitlements: [entitlement]
+        )
+      ]
+    )
+    let entitlements = ConfigLogic.extractEntitlements(from: config)
+
+    XCTAssertEqual(entitlements[productId], [entitlement])
   }
 }

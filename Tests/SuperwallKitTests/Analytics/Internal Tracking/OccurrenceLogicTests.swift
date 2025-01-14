@@ -25,7 +25,7 @@ class OccurrenceLogicTests: XCTestCase {
 
   override func tearDown() {
     super.tearDown()
-    coreDataStack.deleteAllEntities(named: "EventData")
+    coreDataStack.deleteAllEntities(named: "PlacementData")
     coreDataManager = nil
     coreDataStack = nil
   }
@@ -49,10 +49,10 @@ class OccurrenceLogicTests: XCTestCase {
 /*
     let twoMinsAgo: TimeInterval = -120
     let firstEventDate = Date().advanced(by: twoMinsAgo)
-    let firstEventData: EventData = .stub()
+    let firstPlacementData: PlacementData = .stub()
       .setting(\.name, to: eventName)
       .setting(\.createdAt, to: firstEventDate)
-    coreDataManager.saveEventData(firstEventData) { _ in
+    coreDataManager.savePlacementData(firstPlacementData) { _ in
       expectation.fulfill()
     }*/
     var percentage: Double = 1 / 2
@@ -60,7 +60,7 @@ class OccurrenceLogicTests: XCTestCase {
     for name in arrayOfNames {
       let count = Int(1000000 * percentage)
       total += count
-      coreDataStack.batchInsertEventData(eventName: name, count: count) {
+      coreDataStack.batchInsertPlacementData(eventName: name, count: count) {
         expectation.fulfill()
       }
       percentage = percentage / 2
@@ -69,10 +69,10 @@ class OccurrenceLogicTests: XCTestCase {
 /*
     let twoMinsAhead: TimeInterval = 120
     let lastEventDate = Date().advanced(by: twoMinsAhead)
-    let lastEventData: EventData = .stub()
+    let lastPlacementData: PlacementData = .stub()
       .setting(\.name, to: eventName)
       .setting(\.createdAt, to: lastEventDate)
-    coreDataManager.saveEventData(lastEventData) { _ in
+    coreDataManager.savePlacementData(lastPlacementData) { _ in
       expectation.fulfill()
     }*/
 
@@ -111,8 +111,8 @@ class OccurrenceLogicTests: XCTestCase {
     XCTAssertEqual(count["$count_24h"] as? Int, 11000)
     XCTAssertEqual(count["$count_session"] as? Int, 11000)
     XCTAssertEqual(count["$count_today"] as? Int, 11000)
-   // XCTAssertEqual(count["$first_occurred_at"] as? String, firstEventData.createdAt.isoString)
-   // XCTAssertEqual(count["$last_occurred_at"] as? String, lastEventData.createdAt.isoString)
+   // XCTAssertEqual(count["$first_occurred_at"] as? String, firstPlacementData.createdAt.isoString)
+   // XCTAssertEqual(count["$last_occurred_at"] as? String, lastPlacementData.createdAt.isoString)
   }
 }
 

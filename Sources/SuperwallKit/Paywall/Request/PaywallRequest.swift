@@ -21,8 +21,8 @@ struct PaywallRequest {
     var featureGatingBehavior: FeatureGatingBehavior?
   }
 
-  /// The event data
-  var eventData: EventData?
+  /// The placement data
+  var placementData: PlacementData?
 
   /// The identifiers for the paywall and experiment.
   let responseIdentifiers: ResponseIdentifiers

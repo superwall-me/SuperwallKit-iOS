@@ -15,16 +15,13 @@ concurrency:
 
 jobs:
   run-tests:
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '14.3'
       - name: Git Checkout
         uses: actions/checkout@v3
       - name: xcodegen
-        uses: xavierLowmiller/xcodegen-action@1.1.2
+        uses: xavierLowmiller/xcodegen-action@1.2.3
       - name: Run Tests
         run: |
-          xcodebuild -project SuperwallKit.xcodeproj -scheme SuperwallKit -sdk iphonesimulator -destination 'platform=iOS Simulator,OS=latest,name=iPhone 14 Pro' test
+          xcodebuild -project SuperwallKit.xcodeproj -scheme SuperwallKit -sdk iphonesimulator -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15 Pro' test

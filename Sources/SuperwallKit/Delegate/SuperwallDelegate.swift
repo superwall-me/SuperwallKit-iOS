@@ -12,33 +12,34 @@ import Foundation
 /// The delegate methods receive callbacks from the SDK in response to certain events that happen on the paywall.
 ///
 /// You set this directly using ``Superwall/delegate``.
-/// 
+///
 /// To learn how to conform to the delegate in your app and best practices, see
 /// [our docs](https://docs.superwall.com/docs/3rd-party-analytics).
 public protocol SuperwallDelegate: AnyObject {
-  /// Called when the property ``Superwall/subscriptionStatus`` changes.
-  ///
-  /// If you're letting Superwall handle subscription-related logic, then this is based on
-  /// the device receipt. Otherwise, this will reflect the value that you set.
+  /// Called when the entitlements ``EntitlementsInfo/status`` changes.
   ///
   /// You can use this function to update the state of your application. Alternatively, you can
-  /// use the published properties of ``Superwall/subscriptionStatus`` to react to
+  /// use the published property ``EntitlementsInfo/status`` to react to
   /// changes as they happen.
   ///
   /// - Parameters:
-  ///   - newValue: The new value of ``Superwall/subscriptionStatus``.
+  ///   - oldValue: The old value of the entitlement ``EntitlementsInfo/status``.
+  ///   - newValue: The new value of the entitlement ``EntitlementsInfo/status``.
   @MainActor
-  func subscriptionStatusDidChange(to newValue: SubscriptionStatus)
+  func entitlementStatusDidChange(
+    from oldValue: EntitlementStatus,
+    to newValue: EntitlementStatus
+  )
 
   /// Called whenever an internal analytics event is tracked.
   ///
   /// Use this method when you want to track internal analytics events in your own analytics.
   ///
-  /// You can switch over `eventInfo.event` for a list of possible cases. See [Superwall Events](https://docs.superwall.com/docs/tracking-analytics) for more info.
+  /// You can switch over `placementInfo.placement` for a list of possible cases. See [Superwall Placements](https://docs.superwall.com/docs/tracking-analytics) for more info.
   ///
-  /// - Parameter eventInfo: A `SuperwallEventInfo` object containing an `event` and a `params` parameter.
+  /// - Parameter placementInfo: A ``SuperwallPlacementInfo`` object containing a `placement` and a `params` parameter.
   @MainActor
-  func handleSuperwallEvent(withInfo eventInfo: SuperwallEventInfo)
+  func handleSuperwallPlacement(withInfo placementInfo: SuperwallPlacementInfo)
 
   /// Called when the user taps an element on your paywall that has the click action `Custom action`,
   /// or a `data-pw-custom` tag attached.
@@ -98,6 +99,11 @@ public protocol SuperwallDelegate: AnyObject {
 }
 
 extension SuperwallDelegate {
+  public func entitlementStatusDidChange(
+    from oldValue: EntitlementStatus,
+    to newValue: EntitlementStatus
+  ) {}
+
   public func handleCustomPaywallAction(withName name: String) {}
 
   public func willDismissPaywall(withInfo paywallInfo: PaywallInfo) {}
@@ -112,9 +118,7 @@ extension SuperwallDelegate {
 
   public func paywallWillOpenDeepLink(url: URL) {}
 
-  public func handleSuperwallEvent(withInfo eventInfo: SuperwallEventInfo) {}
-
-  public func subscriptionStatusDidChange(to newValue: SubscriptionStatus) {}
+  public func handleSuperwallPlacement(withInfo placementInfo: SuperwallPlacementInfo) {}
 
   public func handleLog(
     level: String,

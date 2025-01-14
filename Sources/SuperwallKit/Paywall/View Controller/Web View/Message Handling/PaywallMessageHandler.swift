@@ -26,7 +26,6 @@ protocol PaywallMessageHandlerDelegate: AnyObject {
 @MainActor
 final class PaywallMessageHandler: WebEventDelegate {
   weak var delegate: PaywallMessageHandlerDelegate?
-  private unowned let sessionEventsManager: SessionEventsManager
   private unowned let receiptManager: ReceiptManager
   private let factory: VariablesFactory
 
@@ -38,11 +37,9 @@ final class PaywallMessageHandler: WebEventDelegate {
   private var messageQueue: Queue<EnqueuedMessage> = Queue()
 
   init(
-    sessionEventsManager: SessionEventsManager,
     receiptManager: ReceiptManager,
     factory: VariablesFactory
   ) {
-    self.sessionEventsManager = sessionEventsManager
     self.receiptManager = receiptManager
     self.factory = factory
   }
@@ -73,75 +70,75 @@ final class PaywallMessageHandler: WebEventDelegate {
       hapticFeedback()
       delegate?.eventDidOccur(.closed)
     case .paywallOpen:
-      let eventName = SuperwallEventObjc.paywallOpen.description
+      let paywallOpen = SuperwallPlacementObjc.paywallOpen.description
       if delegate?.paywall.paywalljsVersion == nil {
         let message = EnqueuedMessage(
-          name: eventName,
+          name: paywallOpen,
           paywall: paywall
         )
         messageQueue.enqueue(message)
       } else {
         Task {
-          await self.pass(eventName: eventName, from: paywall)
+          await self.pass(placement: paywallOpen, from: paywall)
         }
       }
     case .paywallClose:
-      let eventName = SuperwallEventObjc.paywallClose.description
+      let paywallClose = SuperwallPlacementObjc.paywallClose.description
       if delegate?.paywall.paywalljsVersion == nil {
         let message = EnqueuedMessage(
-          name: eventName,
+          name: paywallClose,
           paywall: paywall
         )
         messageQueue.enqueue(message)
       } else {
         Task {
-          await self.pass(eventName: eventName, from: paywall)
+          await self.pass(placement: paywallClose, from: paywall)
         }
       }
     case .restoreStart:
-      let eventName = SuperwallEventObjc.restoreStart.description
+      let restoreStart = SuperwallPlacementObjc.restoreStart.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: restoreStart, from: paywall)
       }
     case .restoreComplete:
-      let eventName = SuperwallEventObjc.restoreComplete.description
+      let restoreComplete = SuperwallPlacementObjc.restoreComplete.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: restoreComplete, from: paywall)
       }
     case .restoreFail:
-      let eventName = SuperwallEventObjc.restoreFail.description
+      let restoreFail = SuperwallPlacementObjc.restoreFail.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: restoreFail, from: paywall)
       }
     case .transactionRestore:
-      let eventName = SuperwallEventObjc.transactionRestore.description
+      let transactionRestore = SuperwallPlacementObjc.transactionRestore.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: transactionRestore, from: paywall)
       }
     case .transactionStart:
-      let eventName = SuperwallEventObjc.transactionStart.description
+      let transactionStart = SuperwallPlacementObjc.transactionStart.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: transactionStart, from: paywall)
       }
     case .transactionComplete:
-      let eventName = SuperwallEventObjc.transactionComplete.description
+      let transactionComplete = SuperwallPlacementObjc.transactionComplete.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: transactionComplete, from: paywall)
       }
     case .transactionFail:
-      let eventName = SuperwallEventObjc.transactionFail.description
+      let transactionFail = SuperwallPlacementObjc.transactionFail.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: transactionFail, from: paywall)
       }
     case .transactionAbandon:
-      let eventName = SuperwallEventObjc.transactionAbandon.description
+      let transactionAbandon = SuperwallPlacementObjc.transactionAbandon.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: transactionAbandon, from: paywall)
       }
     case .transactionTimeout:
-      let eventName = SuperwallEventObjc.transactionTimeout.description
+      let transactionTimeout = SuperwallPlacementObjc.transactionTimeout.description
       Task {
-        await self.pass(eventName: eventName, from: paywall)
+        await self.pass(placement: transactionTimeout, from: paywall)
       }
     case .openUrl(let url):
       openUrl(url)
@@ -153,19 +150,19 @@ final class PaywallMessageHandler: WebEventDelegate {
       restorePurchases()
     case .purchase(productId: let id):
       purchaseProduct(withId: id)
-    case .custom(data: let customEvent):
-      handleCustomEvent(customEvent)
+    case .custom(data: let name):
+      handleCustomEvent(name)
     case let .customPlacement(name: name, params: params):
       handleCustomPlacement(name: name, params: params)
     }
   }
 
   nonisolated private func pass(
-    eventName: String,
+    placement: String,
     from paywall: Paywall
   ) async {
     let event = [
-      "event_name": eventName,
+      "event_name": placement,
       "paywall_id": paywall.databaseId,
       "paywall_identifier": paywall.identifier
     ]
@@ -180,10 +177,10 @@ final class PaywallMessageHandler: WebEventDelegate {
   ///
   /// This is called every paywall open incase variables like user attributes have changed.
   nonisolated private func passTemplatesToWebView(from paywall: Paywall) async {
-    let eventData = await delegate?.request?.presentationInfo.eventData
+    let eventData = await delegate?.request?.presentationInfo.placementData
     let base64Templates = await TemplateLogic.getBase64EncodedTemplates(
       from: paywall,
-      event: eventData,
+      placement: eventData,
       receiptManager: receiptManager,
       factory: factory
     )
@@ -192,7 +189,7 @@ final class PaywallMessageHandler: WebEventDelegate {
 
   private func passMessageToWebView(_ base64String: String) {
     let messageScript = """
-      window.paywall.accept64('\(base64String)');
+    window.paywall.accept64('\(base64String)');
     """
 
     Logger.debug(
@@ -229,24 +226,24 @@ final class PaywallMessageHandler: WebEventDelegate {
       delegate.paywall.webviewLoadingInfo.endAt = loadedAt
 
       let paywallInfo = delegate.info
-      let trackedEvent = InternalSuperwallEvent.PaywallWebviewLoad(
+      let webViewLoad = InternalSuperwallPlacement.PaywallWebviewLoad(
         state: .complete,
         paywallInfo: paywallInfo
       )
-      await Superwall.shared.track(trackedEvent)
+      await Superwall.shared.track(webViewLoad)
     }
 
     let htmlSubstitutions = paywall.htmlSubstitutions
-    let eventData = await delegate?.request?.presentationInfo.eventData
+    let placementData = await delegate?.request?.presentationInfo.placementData
     let templates = await TemplateLogic.getBase64EncodedTemplates(
       from: paywall,
-      event: eventData,
+      placement: placementData,
       receiptManager: receiptManager,
       factory: factory
     )
     let scriptSrc = """
-      window.paywall.accept64('\(templates)');
-      window.paywall.accept64('\(htmlSubstitutions)');
+    window.paywall.accept64('\(templates)');
+    window.paywall.accept64('\(htmlSubstitutions)');
     """
 
     Logger.debug(
@@ -276,10 +273,11 @@ final class PaywallMessageHandler: WebEventDelegate {
       }
 
       // block selection
-      let selectionString = "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none} .w-webflow-badge { display: none !important; }'; "
-      + "var head = document.head || document.getElementsByTagName('head')[0]; "
-      + "var style = document.createElement('style'); style.type = 'text/css'; "
-      + "style.appendChild(document.createTextNode(css)); head.appendChild(style); "
+      let selectionString =
+        "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none} .w-webflow-badge { display: none !important; }'; "
+        + "var head = document.head || document.getElementsByTagName('head')[0]; "
+        + "var style = document.createElement('style'); style.type = 'text/css'; "
+        + "style.appendChild(document.createTextNode(css)); head.appendChild(style); "
 
       let selectionScript = WKUserScript(
         source: selectionString,
@@ -288,17 +286,21 @@ final class PaywallMessageHandler: WebEventDelegate {
       )
       self.delegate?.webView.configuration.userContentController.addUserScript(selectionScript)
 
-      let preventSelection = "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none}'; var head = document.head || document.getElementsByTagName('head')[0]; var style = document.createElement('style'); style.type = 'text/css'; style.appendChild(document.createTextNode(css)); head.appendChild(style);"
+      let preventSelection =
+        "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none}'; var head = document.head || document.getElementsByTagName('head')[0]; var style = document.createElement('style'); style.type = 'text/css'; style.appendChild(document.createTextNode(css)); head.appendChild(style);"
       self.delegate?.webView.evaluateJavaScript(preventSelection)
 
-      let preventZoom: String = "var meta = document.createElement('meta');" + "meta.name = 'viewport';" + "meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';" + "var head = document.getElementsByTagName('head')[0];" + "head.appendChild(meta);"
+      let preventZoom: String =
+        "var meta = document.createElement('meta');" + "meta.name = 'viewport';"
+        + "meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';"
+        + "var head = document.getElementsByTagName('head')[0];" + "head.appendChild(meta);"
       self.delegate?.webView.evaluateJavaScript(preventZoom)
 
       while !messageQueue.isEmpty {
         if let message = messageQueue.dequeue() {
           Task {
             await self.pass(
-              eventName: message.name,
+              placement: message.name,
               from: message.paywall
             )
           }
@@ -309,15 +311,15 @@ final class PaywallMessageHandler: WebEventDelegate {
 
   private func openUrl(_ url: URL) {
     #if os(visionOS)
-    openUrlInSafari(url)
+      openUrlInSafari(url)
     #else
-    detectHiddenPaywallEvent(
-      "openUrl",
-      userInfo: ["url": url]
-    )
-    hapticFeedback()
-    delegate?.eventDidOccur(.openedURL(url: url))
-    delegate?.presentSafariInApp(url)
+      detectHiddenPaywallEvent(
+        "openUrl",
+        userInfo: ["url": url]
+      )
+      hapticFeedback()
+      delegate?.eventDidOccur(.openedURL(url: url))
+      delegate?.presentSafariInApp(url)
     #endif
   }
 
@@ -396,7 +398,7 @@ final class PaywallMessageHandler: WebEventDelegate {
       return
     }
     #if !os(visionOS)
-    UIImpactFeedbackGenerator().impactOccurred(intensity: 0.7)
+      UIImpactFeedbackGenerator().impactOccurred(intensity: 0.7)
     #endif
   }
 }

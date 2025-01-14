@@ -17,8 +17,8 @@ public enum RestorationResult: Sendable, Equatable {
   /// The restore was successful
   ///
   /// - Warning: This does not mean the user is subscribed, it just means your restore
-  /// logic did not fail due to some error. User will see an alert if ``Superwall/subscriptionStatus`` is
-  /// not ``SubscriptionStatus/active`` after returning this value.
+  /// logic did not fail due to some error. User will see an alert if `Superwall.shared.entitlements.active` is
+  /// not empty after returning this value.
   case restored
 
   /// The restore failed for some reason (i.e. you were not able to determine if the user has an active subscription.
@@ -51,8 +51,8 @@ public enum RestorationResult: Sendable, Equatable {
 @objc(SWKRestorationResult)
 public enum RestorationResultObjc: Int, Sendable, Equatable {
   /// The restore was successful – this does not mean the user is subscribed, it just means your restore
-  /// logic did not fail due to some error. User will see an alert if ``Superwall/subscriptionStatus`` is
-  /// not ``SubscriptionStatus/active`` after returning this value.
+  /// logic did not fail due to some error. User will see an alert if `Superwall.shared.entitlements.active` is
+  /// not empty after returning this value.
   case restored
 
   /// The restore failed for some reason, e.g. you were not able to determine if the user has an active subscription.

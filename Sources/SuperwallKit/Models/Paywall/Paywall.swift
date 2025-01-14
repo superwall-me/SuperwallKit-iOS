@@ -54,14 +54,10 @@ struct Paywall: Codable {
   /// A surveys to potentially show when an action happens in the paywall.
   var surveys: [Survey]
 
-  /// The products associated with the paywall.
-  var products: [Product]
-
   /// An ordered list of products associated with the paywall.
-  var productItems: [ProductItem] {
+  var products: [Product] {
     didSet {
-      productIds = productItems.map { $0.id }
-      products = Self.makeProducts(from: productItems)
+      productIds = products.map { $0.id }
     }
   }
 
@@ -101,7 +97,7 @@ struct Paywall: Codable {
   var closeReason: PaywallCloseReason = .none
 
   /// Determines whether a paywall executes the
-  /// ``Superwall/register(event:params:handler:feature:)`` feature block if the
+  /// ``Superwall/register(placement:params:handler:feature:)`` feature block if the
   /// user does not purchase.
   var featureGating: FeatureGatingBehavior
 
@@ -137,7 +133,7 @@ struct Paywall: Codable {
     case presentationDelay
     case backgroundColorHex
     case darkBackgroundColorHex
-    case productItems = "productsV2"
+    case products = "productsV2"
     case featureGating
     case onDeviceCache
     case localNotifications
@@ -180,12 +176,10 @@ struct Paywall: Codable {
     surveys = throwableSurveys.compactMap { try? $0.result.get() }
 
     let presentationStyle = try values.decode(PaywallPresentationStyle.self, forKey: .presentationStyle)
-    let presentationCondition = try values.decode(PresentationCondition.self, forKey: .presentationCondition)
     let presentationDelay = try values.decode(Int.self, forKey: .presentationDelay)
 
     presentation = PaywallPresentationInfo(
       style: presentationStyle,
-      condition: presentationCondition,
       delay: presentationDelay
     )
 
@@ -203,13 +197,12 @@ struct Paywall: Codable {
     }
 
     let appStoreProductItems = try values.decodeIfPresent(
-      [Throwable<ProductItem>].self,
-      forKey: .productItems
+      [Throwable<Product>].self,
+      forKey: .products
     ) ?? []
-    productItems = appStoreProductItems.compactMap { try? $0.result.get() }
+    products = appStoreProductItems.compactMap { try? $0.result.get() }
 
-    productIds = productItems.map { $0.id }
-    products = Self.makeProducts(from: productItems)
+    productIds = products.map { $0.id }
 
     let responseLoadStartTime = try values.decodeIfPresent(Date.self, forKey: .responseLoadStartTime)
     let responseLoadCompleteTime = try values.decodeIfPresent(Date.self, forKey: .responseLoadCompleteTime)
@@ -281,7 +274,6 @@ struct Paywall: Codable {
     }
 
     try container.encode(presentation.style, forKey: .presentationStyle)
-    try container.encode(presentation.condition, forKey: .presentationCondition)
     try container.encode(presentation.delay, forKey: .presentationDelay)
 
     try container.encode(backgroundColorHex, forKey: .backgroundColorHex)
@@ -290,8 +282,8 @@ struct Paywall: Codable {
       try container.encode(darkBackgroundColorHex, forKey: .darkBackgroundColorHex)
     }
 
-    if !productItems.isEmpty {
-      try container.encode(productItems, forKey: .productItems)
+    if !products.isEmpty {
+      try container.encode(products, forKey: .products)
     }
 
     try container.encodeIfPresent(responseLoadingInfo.startAt, forKey: .responseLoadStartTime)
@@ -321,29 +313,6 @@ struct Paywall: Codable {
     try container.encodeIfPresent(isScrollEnabled, forKey: .isScrollEnabled)
   }
 
-
-  private static func makeProducts(from productItems: [ProductItem]) -> [Product] {
-    var output: [Product] = []
-
-    for productItem in productItems {
-      if productItem.name == "primary" {
-        output.append(
-          Product(type: .primary, id: productItem.id)
-        )
-      } else if productItem.name == "secondary" {
-        output.append(
-          Product(type: .secondary, id: productItem.id)
-        )
-      } else if productItem.name == "tertiary" {
-        output.append(
-          Product(type: .tertiary, id: productItem.id)
-        )
-      }
-    }
-
-    return output
-  }
-
   // Only used in stub
   private init(
     databaseId: String,
@@ -360,7 +329,7 @@ struct Paywall: Codable {
     backgroundColor: UIColor,
     darkBackgroundColorHex: String?,
     darkBackgroundColor: UIColor?,
-    productItems: [ProductItem],
+    productItems: [Product],
     productIds: [String],
     responseLoadingInfo: LoadingInfo,
     webviewLoadingInfo: LoadingInfo,
@@ -392,7 +361,7 @@ struct Paywall: Codable {
     self.backgroundColorHex = backgroundColorHex
     self.darkBackgroundColor = darkBackgroundColor
     self.darkBackgroundColorHex = darkBackgroundColorHex
-    self.productItems = productItems
+    self.products = productItems
     self.productIds = productIds
     self.responseLoadingInfo = responseLoadingInfo
     self.webviewLoadingInfo = webviewLoadingInfo
@@ -407,12 +376,11 @@ struct Paywall: Codable {
     self.localNotifications = localNotifications
     self.computedPropertyRequests = computedPropertyRequests
     self.surveys = surveys
-    self.products = Self.makeProducts(from: productItems)
     self.manifest = manifest
     self.isScrollEnabled = isScrollEnabled
   }
 
-  func getInfo(fromEvent: EventData?) -> PaywallInfo {
+  func getInfo(fromPlacement: PlacementData?) -> PaywallInfo {
     return PaywallInfo(
       databaseId: databaseId,
       identifier: identifier,
@@ -421,9 +389,8 @@ struct Paywall: Codable {
       buildId: buildId,
       url: url,
       products: products,
-      productItems: productItems,
       productIds: productIds,
-      fromEventData: fromEvent,
+      fromPlacementData: fromPlacement,
       responseLoadStartTime: responseLoadingInfo.startAt,
       responseLoadCompleteTime: responseLoadingInfo.endAt,
       responseLoadFailTime: responseLoadingInfo.failAt,
@@ -450,7 +417,7 @@ struct Paywall: Codable {
   }
 
   mutating func update(from paywall: Paywall) {
-    productItems = paywall.productItems
+    products = paywall.products
     productVariables = paywall.productVariables
     isFreeTrialAvailable = paywall.isFreeTrialAvailable
     productsLoadingInfo = paywall.productsLoadingInfo
@@ -483,7 +450,6 @@ extension Paywall: Stubbable {
       htmlSubstitutions: "",
       presentation: PaywallPresentationInfo(
         style: .modal,
-        condition: .checkUserSubscription,
         delay: 0
       ),
       backgroundColorHex: "",

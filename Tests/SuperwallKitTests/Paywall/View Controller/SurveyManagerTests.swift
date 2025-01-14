@@ -1,11 +1,12 @@
 //
 //  SurveyManagerTests.swift
-//  
+//
 //
 //  Created by Yusuf Tör on 31/07/2023.
 //
 
 import XCTest
+
 @testable import SuperwallKit
 
 @available(iOS 14.0, *)
@@ -20,7 +21,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -63,7 +63,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -107,7 +106,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -129,7 +127,7 @@ final class SurveyManagerTests: XCTestCase {
 
     SurveyManager.presentSurveyIfAvailable(
       [.stub().setting(\.presentationCondition, to: .onPurchase)],
-      paywallResult: .purchased(productId: "abc"),
+      paywallResult: .purchased(StoreProduct(sk1Product: MockSkProduct())),
       paywallCloseReason: .systemLogic,
       using: paywallVc,
       loadingState: .loadingPurchase,
@@ -150,7 +148,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -193,7 +190,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -236,7 +232,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -285,7 +280,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -337,7 +331,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -356,7 +349,6 @@ final class SurveyManagerTests: XCTestCase {
       cache: nil,
       paywallArchiveManager: nil
     )
-
 
     SurveyManager.presentSurveyIfAvailable(
       surveys,
@@ -387,7 +379,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )
@@ -441,7 +432,6 @@ final class SurveyManagerTests: XCTestCase {
     let dependencyContainer = DependencyContainer()
 
     let messageHandler = PaywallMessageHandler(
-      sessionEventsManager: dependencyContainer.sessionEventsManager,
       receiptManager: dependencyContainer.receiptManager,
       factory: dependencyContainer
     )

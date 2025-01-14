@@ -18,13 +18,13 @@ class AppSessionManager {
 
   private unowned let configManager: ConfigManager
   private unowned let storage: Storage
-  private unowned let delegate: DeviceHelperFactory & UserAttributesEventFactory
+  private unowned let delegate: DeviceHelperFactory & UserAttributesPlacementFactory
 
   init(
     configManager: ConfigManager,
     identityManager: IdentityManager,
     storage: Storage,
-    delegate: DeviceHelperFactory & UserAttributesEventFactory
+    delegate: DeviceHelperFactory & UserAttributesPlacementFactory
   ) {
     self.configManager = configManager
     self.storage = storage
@@ -83,7 +83,7 @@ class AppSessionManager {
   @objc private func applicationWillResignActive() {
     storage.recordFirstSessionTracked()
     Task {
-      await Superwall.shared.track(InternalSuperwallEvent.AppClose())
+      await Superwall.shared.track(InternalSuperwallPlacement.AppClose())
     }
     lastAppClose = Date()
     appSession.endAt = Date()
@@ -95,7 +95,7 @@ class AppSessionManager {
 
   @objc private func applicationDidBecomeActive() {
     Task {
-      await Superwall.shared.track(InternalSuperwallEvent.AppOpen())
+      await Superwall.shared.track(InternalSuperwallPlacement.AppOpen())
       await sessionCouldRefresh()
     }
   }
@@ -122,14 +122,14 @@ class AppSessionManager {
       appSession = AppSession()
 
       let deviceAttributes = await delegate.makeSessionDeviceAttributes()
-      let userAttributes = delegate.makeUserAttributesEvent()
+      let userAttributes = delegate.makeUserAttributesPlacement()
 
       await withTaskGroup(of: Void.self) { [weak self] group in
         guard let self = self else {
           return
         }
         group.addTask {
-          await Superwall.shared.track(InternalSuperwallEvent.SessionStart())
+          await Superwall.shared.track(InternalSuperwallPlacement.SessionStart())
         }
 
         // Only track device attributes if we've already tracked app launch before.
@@ -138,7 +138,7 @@ class AppSessionManager {
         if self.didTrackAppLaunch {
           group.addTask {
             await Superwall.shared.track(
-              InternalSuperwallEvent.DeviceAttributes(deviceAttributes: deviceAttributes)
+              InternalSuperwallPlacement.DeviceAttributes(deviceAttributes: deviceAttributes)
             )
           }
 
@@ -160,7 +160,7 @@ class AppSessionManager {
     if didTrackAppLaunch {
       return
     }
-    await Superwall.shared.track(InternalSuperwallEvent.AppLaunch())
+    await Superwall.shared.track(InternalSuperwallPlacement.AppLaunch())
     didTrackAppLaunch = true
   }
 }

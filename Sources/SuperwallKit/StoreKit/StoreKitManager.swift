@@ -4,23 +4,23 @@ import Combine
 
 actor StoreKitManager {
   /// Retrieves products from storekit.
-  private let productsFetcher: ProductsFetcherSK1
+  private let productsManager: ProductsManager
 
   private(set) var productsById: [String: StoreProduct] = [:]
   private struct ProductProcessingResult {
     let productIdsToLoad: Set<String>
     let substituteProductsById: [String: StoreProduct]
-    let productItems: [ProductItem]
+    let productItems: [Product]
   }
 
-  init(productsFetcher: ProductsFetcherSK1) {
-    self.productsFetcher = productsFetcher
+  init(productsManager: ProductsManager) {
+    self.productsManager = productsManager
   }
 
   func getProductVariables(for paywall: Paywall) async -> [ProductVariable] {
     guard let output = try? await getProducts(
       forPaywall: paywall,
-      event: nil
+      placement: nil
     ) else {
       return []
     }
@@ -28,16 +28,19 @@ actor StoreKitManager {
     var productAttributes: [ProductVariable] = []
 
     // Add the StoreProduct attributes for each product at its corresponding index
-    paywall.productItems.forEach { productItem in
+    paywall.products.forEach { productItem in
       guard let storeProduct = output.productsById[productItem.id] else {
         return
       }
-      productAttributes.append(
-        ProductVariable(
-          name: productItem.name,
-          attributes: storeProduct.attributesJson
+
+      if let name = productItem.name {
+        productAttributes.append(
+          ProductVariable(
+            name: name,
+            attributes: storeProduct.attributesJson
+          )
         )
-      )
+      }
     }
 
     return productAttributes
@@ -45,19 +48,19 @@ actor StoreKitManager {
 
   func getProducts(
     forPaywall paywall: Paywall?,
-    event: EventData?,
+    placement: PlacementData?,
     substituting substituteProductsByLabel: [String: StoreProduct]? = nil
-  ) async throws -> (productsById: [String: StoreProduct], productItems: [ProductItem]) {
+  ) async throws -> (productsById: [String: StoreProduct], productItems: [Product]) {
     let processingResult = removeAndStore(
       substituteProductsByLabel: substituteProductsByLabel,
       paywallProductIds: paywall?.productIds ?? [],
-      productItems: paywall?.productItems ?? []
+      productItems: paywall?.products ?? []
     )
 
-    let products = try await productsFetcher.products(
+    let products = try await productsManager.products(
       identifiers: processingResult.productIdsToLoad,
       forPaywall: paywall,
-      event: event
+      placement: placement
     )
 
     var productsById = processingResult.substituteProductsById
@@ -75,7 +78,7 @@ actor StoreKitManager {
   private func removeAndStore(
     substituteProductsByLabel: [String: StoreProduct]?,
     paywallProductIds: [String],
-    productItems: [ProductItem]
+    productItems: [Product]
   ) -> ProductProcessingResult {
     /// Product IDs to load in the future. Initialised to the given paywall products.
     var productIdsToLoad = paywallProductIds
@@ -84,7 +87,7 @@ actor StoreKitManager {
     var substituteProductsById: [String: StoreProduct] = [:]
 
     /// The final product IDs by index. Initialised with the ones from the paywall object.
-    var productItems: [ProductItem] = productItems
+    var productItems: [Product] = productItems
 
     // If there are no substitutions, return what we have
     guard let substituteProductsByLabel = substituteProductsByLabel else {
@@ -107,16 +110,18 @@ actor StoreKitManager {
 
       if let index = productItems.firstIndex(where: { $0.name == name }) {
         // Update the product ID at the found index
-        productItems[index] = ProductItem(
+        productItems[index] = Product(
           name: name,
-          type: .appStore(.init(id: productId))
+          type: .appStore(.init(id: productId)),
+          entitlements: product.entitlements
         )
       } else {
         // If it isn't found, just append to the list.
         productItems.append(
-          ProductItem(
+          Product(
             name: name,
-            type: .appStore(.init(id: productId))
+            type: .appStore(.init(id: productId)),
+            entitlements: product.entitlements
           )
         )
       }

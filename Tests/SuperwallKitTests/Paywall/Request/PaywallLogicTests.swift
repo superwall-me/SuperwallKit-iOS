@@ -33,12 +33,12 @@ class PaywallLogicTests: XCTestCase {
     // Given
     let id = "myid"
     let locale = "en_US"
-    let event: EventData = .stub()
+    let event: PlacementData = .stub()
 
     // When
     let hash = PaywallLogic.requestHash(
       identifier: id,
-      event: event,
+      placement: event,
       locale: locale,
       joinedSubstituteProductIds: nil
     )
@@ -51,15 +51,21 @@ class PaywallLogicTests: XCTestCase {
     // Given
     let id = "myid"
     let locale = "en_US"
-    let event: EventData = .stub()
-    let product1 = StoreProduct(sk1Product: MockSkProduct(productIdentifier: "abc"))
-    let product2 = StoreProduct(sk1Product: MockSkProduct(productIdentifier: "def"))
+    let event: PlacementData = .stub()
+    let product1 = StoreProduct(
+      sk1Product: MockSkProduct(productIdentifier: "abc"),
+      entitlements: []
+    )
+    let product2 = StoreProduct(
+      sk1Product: MockSkProduct(productIdentifier: "def"),
+      entitlements: []
+    )
     let ids = ["abc", "def"].joined()
 
     // When
     let hash = PaywallLogic.requestHash(
       identifier: id,
-      event: event,
+      placement: event,
       locale: locale,
       joinedSubstituteProductIds: ids
     )
@@ -72,12 +78,12 @@ class PaywallLogicTests: XCTestCase {
     // Given
     let locale = "en_US"
     let eventName = "MyEvent"
-    let event: EventData = .stub()
+    let event: PlacementData = .stub()
       .setting(\.name, to: eventName)
 
     // When
     let hash = PaywallLogic.requestHash(
-      event: event,
+      placement: event,
       locale: locale,
       joinedSubstituteProductIds: nil
     )
@@ -104,14 +110,17 @@ class PaywallLogicTests: XCTestCase {
     // Given
     let locale = "en_US"
     let eventName = "MyEvent"
-    let event: EventData = .stub()
+    let event: PlacementData = .stub()
       .setting(\.name, to: eventName)
-    let product1 = StoreProduct(sk1Product: MockSkProduct(productIdentifier: "abc"))
+    let product1 = StoreProduct(
+      sk1Product: MockSkProduct(productIdentifier: "abc"),
+      entitlements: []
+    )
     let ids = "abc"
 
     // When
     let hash = PaywallLogic.requestHash(
-      event: event,
+      placement: event,
       locale: locale,
       joinedSubstituteProductIds: ids
     )
@@ -142,9 +151,10 @@ class PaywallLogicTests: XCTestCase {
 
   func testGetVariablesAndFreeTrial_productNotFound() async {
     let productId = "id1"
-    let products = [ProductItem(
+    let products = [Product(
       name: "primary",
-      type: .appStore(.init(id: productId))
+      type: .appStore(.init(id: productId)),
+      entitlements: []
     )]
 
     let skProductId = "id2"
@@ -152,8 +162,8 @@ class PaywallLogicTests: XCTestCase {
       productIdentifier: skProductId,
       price: 1.99
     )
-    let productsById = [skProductId: StoreProduct(sk1Product: skProduct)]
-    
+    let productsById = [skProductId: StoreProduct(sk1Product: skProduct, entitlements: [])]
+
     let response = await PaywallLogic.getVariablesAndFreeTrial(
       productItems: products,
       productsById: productsById,
@@ -175,9 +185,10 @@ class PaywallLogicTests: XCTestCase {
   func testGetVariablesAndFreeTrial_secondaryProduct() async {
     // Given
     let productId = "id1"
-    let products = [ProductItem(
+    let products = [Product(
       name: "secondary",
-      type: .appStore(.init(id: productId))
+      type: .appStore(.init(id: productId)),
+      entitlements: []
     )]
 
     let product = StoreProduct(
@@ -185,7 +196,8 @@ class PaywallLogicTests: XCTestCase {
         MockSkProduct(
           productIdentifier: productId,
           price: 1.99
-        )
+        ),
+      entitlements: []
     )
     let productsById = [productId: product]
 
@@ -210,9 +222,9 @@ class PaywallLogicTests: XCTestCase {
   func testGetVariablesAndFreeTrial_primaryProductHasPurchased_noOverride() async {
     // Given
     let productId = "id1"
-    let products = [ProductItem(
+    let products = [Product(
       name: "primary",
-      type: .appStore(.init(id: productId))
+      type: .appStore(.init(id: productId)), entitlements: []
     )]
     let mockIntroPeriod = MockIntroductoryPeriod(
       testSubscriptionPeriod: MockSubscriptionPeriod()
@@ -224,7 +236,8 @@ class PaywallLogicTests: XCTestCase {
           productIdentifier: productId,
           introPeriod: mockIntroPeriod,
           price: 1.99
-        )
+        ), 
+      entitlements: []
     )
     let productsById = [productId: product]
 
@@ -252,9 +265,9 @@ class PaywallLogicTests: XCTestCase {
   func testGetVariablesAndFreeTrial_primaryProductHasntPurchased_noOverride() async {
     // Given
     let productId = "id1"
-    let products = [ProductItem(
+    let products = [Product(
       name: "primary",
-      type: .appStore(.init(id: productId))
+      type: .appStore(.init(id: productId)), entitlements: []
     )]
     let mockIntroPeriod = MockIntroductoryPeriod(
       testSubscriptionPeriod: MockSubscriptionPeriod()
@@ -265,7 +278,8 @@ class PaywallLogicTests: XCTestCase {
           productIdentifier: productId,
           introPeriod: mockIntroPeriod,
           price: 1.99
-        )
+        ),
+      entitlements: []
     )
     let productsById = [productId: product]
 
@@ -292,9 +306,10 @@ class PaywallLogicTests: XCTestCase {
   func testGetVariablesAndFreeTrial_primaryProductHasPurchased_withOverride() async {
     // Given
     let productId = "id1"
-    let products = [ProductItem(
+    let products = [Product(
       name: "primary",
-      type: .appStore(.init(id: productId))
+      type: .appStore(.init(id: productId)), 
+      entitlements: []
     )]
     let mockIntroPeriod = MockIntroductoryPeriod(
       testSubscriptionPeriod: MockSubscriptionPeriod()
@@ -305,7 +320,8 @@ class PaywallLogicTests: XCTestCase {
           productIdentifier: productId,
           introPeriod: mockIntroPeriod,
           price: 1.99
-        )
+        ), 
+      entitlements: []
     )
     let productsById = [productId: product]
 
