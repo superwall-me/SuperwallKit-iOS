@@ -26,7 +26,7 @@ struct AlertOption {
 @MainActor
 final class DebugViewController: UIViewController {
   var logoImageView: UIImageView = {
-    let superwallLogo = UIImage(named: "SuperwallKit_superwall_logo", in: Bundle.module, compatibleWith: nil)!
+    let superwallLogo = UIImage(named: "SuperwallKit_superwall_logo", in: Bundle.module, compatibleWith: nil)
     let imageView = UIImageView(image: superwallLogo)
     imageView.contentMode = .scaleAspectFit
     imageView.backgroundColor = .clear
